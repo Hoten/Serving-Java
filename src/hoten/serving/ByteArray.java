@@ -37,8 +37,10 @@ public class ByteArray {
 
     final public static double loadFactor = .75f; //0 < x <= 1
     final public static int defaultInitialSize = 100;
-    protected byte[] bytes;
-    protected int pos;
+    public static SocketHandler server;
+    private byte[] bytes;
+    private int pos;
+    private int type = -1;
 
     public ByteArray() {
         bytes = new byte[defaultInitialSize];
@@ -52,12 +54,20 @@ public class ByteArray {
     }
 
     public ByteArray(byte[] initialBytes) {
-        if (initialBytes != null && initialBytes.length != 0) {
+        if (initialBytes != null) {
             bytes = initialBytes;
             pos = bytes.length;
         } else {
             throw new IllegalArgumentException("Invalid initial byte array");
         }
+    }
+
+    public void setType(int type) {
+        this.type = type;
+    }
+
+    public int getType() {
+        return type;
     }
 
     //set the position to the begining. use before reading data
@@ -228,5 +238,10 @@ public class ByteArray {
         }
         bytes = bos.toByteArray();
         pos = bytes.length;
+    }
+    
+    //only for use client-side
+    public void send() {
+        server.send(this);
     }
 }
