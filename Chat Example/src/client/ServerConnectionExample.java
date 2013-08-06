@@ -22,7 +22,7 @@ public class ServerConnectionExample extends SocketHandler {
     final public static int PRINT = 5;
 
     public ServerConnectionExample(Socket socket) throws IOException {
-        super(socket, SocketHandler.DATA_SIZE.SHORT, SocketHandler.DATA_SIZE.BYTE, SocketHandler.DATA_SIZE.SHORT, SocketHandler.DATA_SIZE.BYTE);
+        super(socket);
     }
 
     @Override

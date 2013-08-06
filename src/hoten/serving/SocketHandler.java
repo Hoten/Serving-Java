@@ -46,6 +46,10 @@ public abstract class SocketHandler {
         startReadingThread();
     }
 
+    public SocketHandler(Socket socket) throws IOException {
+        this(socket, DATA_SIZE.INT, DATA_SIZE.BYTE, DATA_SIZE.INT, DATA_SIZE.BYTE);
+    }
+
     protected abstract void handleData(ByteArray reader) throws IOException;
 
     final public boolean isOpen() {

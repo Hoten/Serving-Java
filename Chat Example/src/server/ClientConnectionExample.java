@@ -24,7 +24,7 @@ public class ClientConnectionExample extends SocketHandler {
     private String username = null;
 
     public ClientConnectionExample(ServingSocketExample server, Socket socket) throws IOException {
-        super(socket, SocketHandler.DATA_SIZE.SHORT, SocketHandler.DATA_SIZE.BYTE, SocketHandler.DATA_SIZE.SHORT, SocketHandler.DATA_SIZE.BYTE);
+        super(socket);
         this.server = server;
         ByteArray msg = new ByteArray();
         msg.setType(ServerConnectionExample.PRINT);
