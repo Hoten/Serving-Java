@@ -32,7 +32,7 @@ public abstract class SocketHandler {
     final private DATA_SIZE IN_MSG_TYPE;
     final private DATA_SIZE OUT_MSG_SIZE;
     final private DATA_SIZE OUT_MSG_TYPE;
-    protected boolean isOpen;
+    private boolean isOpen;
 
     public SocketHandler(Socket socket, DATA_SIZE IN_MSG_SIZE, DATA_SIZE IN_MSG_TYPE, DATA_SIZE OUT_MSG_SIZE, DATA_SIZE OUT_MSG_TYPE) throws IOException {
         this.socket = socket;
@@ -43,25 +43,16 @@ public abstract class SocketHandler {
         in = new DataInputStream(socket.getInputStream());
         out = new DataOutputStream(socket.getOutputStream());
         isOpen = true;
-        beginPolling();
+        startReadingThread();
     }
 
-    private void beginPolling() {
-        new Thread("handle data for: " + socket.getInetAddress()) {
-            @Override
-            public void run() {
-                while (isOpen) {
-                    handleData();
-                }
-            }
-        }.start();
-    }
+    protected abstract void handleData(ByteArray reader) throws IOException;
 
     final public boolean isOpen() {
         return isOpen;
     }
 
-    final public void send(ByteArray message) {
+    public void send(ByteArray message) {
         byte[] b = message.getBytes();
         int messageLength = b.length;
         int type = message.getType();
@@ -88,7 +79,20 @@ public abstract class SocketHandler {
         }
     }
 
-    final public void handleData() {
+    public void close() {
+        if (isOpen) {
+            isOpen = false;
+            try {
+                out.close();
+                in.close();
+                socket.close();
+            } catch (IOException ex) {
+                System.out.println("Error closing streams " + ex);
+            }
+        }
+    }
+
+    private void handleData() {
         try {
             int buffer = 0, type = 0;
 
@@ -140,18 +144,14 @@ public abstract class SocketHandler {
         }
     }
 
-    public void close() {
-        if (isOpen) {
-            isOpen = false;
-            try {
-                out.close();
-                in.close();
-                socket.close();
-            } catch (IOException ex) {
-                System.out.println("Error closing streams " + ex);
+    private void startReadingThread() {
+        new Thread("handle data for: " + socket.getInetAddress()) {
+            @Override
+            public void run() {
+                while (isOpen) {
+                    handleData();
+                }
             }
-        }
+        }.start();
     }
-
-    protected abstract void handleData(ByteArray reader) throws IOException;
 }

@@ -67,7 +67,7 @@ public class ClientConnectionExample extends SocketHandler {
 
     @Override
     public void close() {
-        if (isOpen) {
+        if (isOpen()) {
             server.removeClient(this);
             if (username != null) {
                 ByteArray msg = new ByteArray();
