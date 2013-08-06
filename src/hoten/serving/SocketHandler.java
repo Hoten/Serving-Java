@@ -47,15 +47,10 @@ public abstract class SocketHandler {
     }
 
     private void beginPolling() {
-        new Thread("poll socket") {
+        new Thread("handle data for: " + socket.getInetAddress()) {
             @Override
             public void run() {
                 while (isOpen) {
-                    try {
-                        Thread.sleep(50);
-                    } catch (InterruptedException ex) {
-                        System.out.println("Thread error: " + ex);
-                    }
                     handleData();
                 }
             }
@@ -95,52 +90,50 @@ public abstract class SocketHandler {
 
     final public void handleData() {
         try {
-            if (in.available() >= IN_MSG_SIZE.length + IN_MSG_TYPE.length) {
-                int buffer = 0, type = 0;
+            int buffer = 0, type = 0;
 
-                //read the buffer and message type
-                if (IN_MSG_SIZE == DATA_SIZE.INT) {
-                    buffer = in.readInt();
-                } else if (IN_MSG_SIZE == DATA_SIZE.SHORT) {
-                    buffer = in.readShort();
-                } else if (IN_MSG_SIZE == DATA_SIZE.BYTE) {
-                    buffer = in.readByte();
+            //read the buffer and message type
+            if (IN_MSG_SIZE == DATA_SIZE.INT) {
+                buffer = in.readInt();
+            } else if (IN_MSG_SIZE == DATA_SIZE.SHORT) {
+                buffer = in.readShort();
+            } else if (IN_MSG_SIZE == DATA_SIZE.BYTE) {
+                buffer = in.readByte();
+            }
+
+            if (IN_MSG_TYPE == DATA_SIZE.INT) {
+                type = in.readInt();
+            } else if (IN_MSG_TYPE == DATA_SIZE.SHORT) {
+                type = in.readShort();
+            } else if (IN_MSG_TYPE == DATA_SIZE.BYTE) {
+                type = in.readByte();
+            }
+
+            //load the data into a byte array
+            //DataInputStream must read in chunks until the entire message is read
+            byte[] bytes = new byte[buffer];
+            int bytesLoaded = 0;
+            do {
+                int avail = in.available();
+                if (avail + bytesLoaded > buffer) {
+                    avail = buffer - bytesLoaded;
                 }
+                in.read(bytes, bytesLoaded, avail);
+                bytesLoaded += avail;
+            } while (bytesLoaded < buffer);
 
-                if (IN_MSG_TYPE == DATA_SIZE.INT) {
-                    type = in.readInt();
-                } else if (IN_MSG_TYPE == DATA_SIZE.SHORT) {
-                    type = in.readShort();
-                } else if (IN_MSG_TYPE == DATA_SIZE.BYTE) {
-                    type = in.readByte();
-                }
+            //if it is not a heartbeat message...
+            if (type != 0) {
+                //pass the data through a reader and call a function to deal with it
+                ByteArray reader = new ByteArray(bytes);
+                reader.setType(type);
+                reader.rewind();
+                handleData(reader);
+            }
 
-                //load the data into a byte array
-                //DataInputStream must read in chunks until the entire message is read
-                byte[] bytes = new byte[buffer];
-                int bytesLoaded = 0;
-                do {
-                    int avail = in.available();
-                    if (avail + bytesLoaded > buffer) {
-                        avail = buffer - bytesLoaded;
-                    }
-                    in.read(bytes, bytesLoaded, avail);
-                    bytesLoaded += avail;
-                } while (bytesLoaded < buffer);
-
-                //if it is not a heartbeat message...
-                if (type != 0) {
-                    //pass the data through a reader and call a function to deal with it
-                    ByteArray reader = new ByteArray(bytes);
-                    reader.setType(type);
-                    reader.rewind();
-                    handleData(reader);
-                }
-
-                //recursively call if there is another message to read
-                if (in.available() > IN_MSG_SIZE.length + IN_MSG_TYPE.length) {
-                    handleData();
-                }
+            //recursively call if there is another message to read
+            if (in.available() > IN_MSG_SIZE.length + IN_MSG_TYPE.length) {
+                handleData();
             }
         } catch (IOException ex) {
             close();
