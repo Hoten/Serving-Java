@@ -4,6 +4,9 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /**
  * ServingSocket.java
@@ -15,33 +18,25 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public abstract class ServingSocket extends Thread {
 
     final private ServerSocket socket;
+    final private ScheduledExecutorService heartbeatScheduler;
     final protected CopyOnWriteArrayList<SocketHandler> clients = new CopyOnWriteArrayList();
     private boolean open;
 
     public ServingSocket(int port) throws IOException {
         super("Serving Socket " + port);
         socket = new ServerSocket(port);
-        startHeartbeat();
-    }
 
-    private void startHeartbeat() {
-        new Thread("Heartbeat") {
+        //start heartbeat
+        final int ms = 250;
+        heartbeatScheduler = Executors.newScheduledThreadPool(1);
+        final ByteArray msg = new ByteArray();
+        final Runnable heartbeat = new Runnable() {
             @Override
             public void run() {
-                ByteArray msg = new ByteArray();
-                while (open) {
-                    for (SocketHandler c : clients) {
-                        c.send(msg);
-                    }
-
-                    try {
-                        Thread.sleep(250);
-                    } catch (InterruptedException ex) {
-                        System.out.println("Thread error: " + ex);
-                    }
-                }
+                sendToAll(msg);
             }
-        }.start();
+        };
+        heartbeatScheduler.scheduleAtFixedRate(heartbeat, ms, ms, TimeUnit.MILLISECONDS);
     }
 
     public void sendToAll(ByteArray msg) {
