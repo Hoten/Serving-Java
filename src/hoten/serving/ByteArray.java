@@ -1,6 +1,10 @@
 package hoten.serving;
 
 import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.logging.Level;
@@ -35,6 +39,32 @@ import java.util.zip.Inflater;
  */
 public class ByteArray {
 
+    public static ByteArray readFromFileAndRewind(File file) {
+        ByteArray ba = readFromFile(file);
+        ba.rewind();
+        return ba;
+    }
+
+    public static ByteArray readFromFile(File file) {
+        DataInputStream dis = null;
+        try {
+            byte[] fileData = new byte[(int) file.length()];
+            dis = new DataInputStream(new FileInputStream(file));
+            dis.readFully(fileData);
+            dis.close();
+            ByteArray ba = new ByteArray(fileData);
+            return ba;
+        } catch (IOException ex) {
+            Logger.getLogger(ByteArray.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            try {
+                dis.close();
+            } catch (IOException ex) {
+                Logger.getLogger(ByteArray.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        return null;
+    }
     final public static double loadFactor = .75f; //0 < x <= 1
     final public static int defaultInitialSize = 100;
     public static SocketHandler server;
@@ -239,7 +269,7 @@ public class ByteArray {
         bytes = bos.toByteArray();
         pos = bytes.length;
     }
-    
+
     //only for use client-side
     public void send() {
         server.send(this);
