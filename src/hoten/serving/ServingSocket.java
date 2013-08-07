@@ -21,34 +21,33 @@ import java.util.concurrent.TimeUnit;
  */
 public abstract class ServingSocket extends Thread {
 
+    private ScheduledExecutorService heartbeatScheduler = Executors.newScheduledThreadPool(1);
     final private ServerSocket socket;
-    final private ScheduledExecutorService heartbeatScheduler;
     final protected CopyOnWriteArrayList<SocketHandler> clients = new CopyOnWriteArrayList();
     private File clientDataFolder;
     private ByteArray clientDataHashes;
     private boolean open;
 
-    public ServingSocket(int port) throws IOException {
+    public ServingSocket(int port, int heatbeatDelay) throws IOException {
         super("Serving Socket " + port);
         socket = new ServerSocket(port);
         clientDataHashes = null;
 
         //start heartbeat
-        final int ms = 250;
-        heartbeatScheduler = Executors.newScheduledThreadPool(1);
         final ByteArray msg = new ByteArray();
+        msg.setType(0);
         final Runnable heartbeat = new Runnable() {
             @Override
             public void run() {
                 sendToAll(msg);
             }
         };
-        heartbeatScheduler.scheduleAtFixedRate(heartbeat, ms, ms, TimeUnit.MILLISECONDS);
+        heartbeatScheduler.scheduleAtFixedRate(heartbeat, heatbeatDelay, heatbeatDelay, TimeUnit.MILLISECONDS);
     }
 
     //use this constructor if you want to transfer data files to clients
-    public ServingSocket(int port, File clientDataFolder) throws IOException {
-        this(port);
+    public ServingSocket(int port, int heatbeatDelay, File clientDataFolder) throws IOException {
+        this(port, heatbeatDelay);
         this.clientDataFolder = clientDataFolder;
 
         if (!clientDataFolder.exists()) {
@@ -215,7 +214,7 @@ public abstract class ServingSocket extends Thread {
         for (File f : currentf) {
             f.delete();
         }
-        
+
         msg.trim();
         return msg;
     }

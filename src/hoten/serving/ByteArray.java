@@ -93,7 +93,7 @@ public class ByteArray {
     public static SocketHandler server;
     private byte[] bytes;
     private int pos;
-    private int type = -1;
+    private int type;
 
     public ByteArray() {
         bytes = new byte[defaultInitialSize];
