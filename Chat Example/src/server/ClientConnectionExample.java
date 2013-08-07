@@ -20,16 +20,15 @@ public class ClientConnectionExample extends SocketHandler {
     final public static int CHAT_MESSAGE = 2;
     final public static int LOGOFF = 3;
     final public static int PRIVATE_MESSAGE = 4;
+    final public static int REQUEST_FILE_UPDATES = 5;
     final private ServingSocketExample server;
     private String username = null;
 
     public ClientConnectionExample(ServingSocketExample server, Socket socket) throws IOException {
         super(socket);
         this.server = server;
-        ByteArray msg = new ByteArray();
-        msg.setType(ServerConnectionExample.PRINT);
-        msg.writeUTF(server.whoIsOnline());
-        send(msg);
+        send(server.getClientDataHashes());
+        sendWhosOnline();
     }
 
     @Override
@@ -62,7 +61,19 @@ public class ClientConnectionExample extends SocketHandler {
                 msg.writeUTF(reader.readUTF());
                 server.sendToClientWithUsername(msg, to);
                 break;
+            case REQUEST_FILE_UPDATES:
+                msg = server.getFilesForClient(reader);
+                msg.setType(ServerConnectionExample.NEW_FILES);
+                send(msg);
+                break;
         }
+    }
+
+    private void sendWhosOnline() {
+        ByteArray msg = new ByteArray();
+        msg.setType(ServerConnectionExample.PRINT);
+        msg.writeUTF(server.whoIsOnline());
+        send(msg);
     }
 
     @Override

@@ -215,7 +215,8 @@ public abstract class ServingSocket extends Thread {
         for (File f : currentf) {
             f.delete();
         }
-
+        
+        msg.trim();
         return msg;
     }
 }

@@ -1,8 +1,10 @@
 package server;
 
+import client.ServerConnectionExample;
 import hoten.serving.ByteArray;
 import hoten.serving.ServingSocket;
 import hoten.serving.SocketHandler;
+import java.io.File;
 import java.io.IOException;
 import java.net.Socket;
 import java.util.Iterator;
@@ -18,7 +20,8 @@ import java.util.Iterator;
 public class ServingSocketExample extends ServingSocket {
 
     public ServingSocketExample(int port) throws IOException {
-        super(port);
+        super(port, new File("clientdata"));
+        getClientDataHashes().setType(ServerConnectionExample.HASHES);
     }
 
     public void sendToClientWithUsername(ByteArray msg, String username) {
