@@ -4,7 +4,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
@@ -122,7 +121,7 @@ public class ByteArray {
     public int getBytesAvailable() {
         return bytes.length - pos;
     }
-    
+
     public String getMD5Hash() {
         trim();
         MessageDigest algorithm;
@@ -248,6 +247,10 @@ public class ByteArray {
             expand();
         }
         bytes[pos++] = (byte) v;
+    }
+
+    public void writeBytes(ByteArray readFromFile) {
+        writeBytes(readFromFile.getBytes());
     }
 
     public void writeBytes(byte[] b) {
