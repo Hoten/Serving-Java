@@ -216,7 +216,6 @@ public abstract class ServingSocket extends Thread {
             f.delete();
         }
 
-        msg.rewind();
         return msg;
     }
 }
