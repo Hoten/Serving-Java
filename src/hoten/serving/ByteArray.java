@@ -2,8 +2,10 @@ package hoten.serving;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
@@ -39,6 +41,26 @@ import java.util.zip.Inflater;
  * @author Hoten
  */
 public class ByteArray {
+
+    public static void saveAs(File loc, ByteArray ba) {
+        saveAs(loc, ba.getBytes());
+    }
+
+    public static void saveAs(File loc, byte[] bytes) {
+        FileOutputStream fos;
+        DataOutputStream dos;
+        loc.getParentFile().mkdirs();
+        try {
+            loc.createNewFile();
+            fos = new FileOutputStream(loc);
+            dos = new DataOutputStream(fos);
+            dos.write(bytes);
+            dos.close();
+            fos.close();
+        } catch (IOException ex) {
+            Logger.getLogger(ByteArray.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
 
     public static ByteArray readFromFileAndRewind(File file) {
         ByteArray ba = readFromFile(file);
@@ -159,6 +181,11 @@ public class ByteArray {
         int length = readShort();
         byte[] utf_bytes = readBytes(length);
         return new String(utf_bytes, 0, length);
+    }
+    
+    public String readUTFBytes(int len) {
+        byte[] utf_bytes = readBytes(len);
+        return new String(utf_bytes, 0, len);
     }
 
     public byte readByte() {
