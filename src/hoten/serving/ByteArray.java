@@ -7,6 +7,8 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.DataFormatException;
@@ -119,6 +121,30 @@ public class ByteArray {
     //if this is acting as a writer, returns the amount of buffer space left
     public int getBytesAvailable() {
         return bytes.length - pos;
+    }
+    
+    public String getMD5Hash() {
+        trim();
+        MessageDigest algorithm;
+        try {
+            algorithm = MessageDigest.getInstance("MD5");
+        } catch (NoSuchAlgorithmException ex) {
+            Logger.getLogger(ByteArray.class.getName()).log(Level.SEVERE, null, ex);
+            return null;
+        }
+        algorithm.reset();
+        algorithm.update(bytes);
+        byte[] messageDigest = algorithm.digest();
+        StringBuffer hash = new StringBuffer();
+        for (int i = 0; i < messageDigest.length; i++) {
+            int num = 0xFF & messageDigest[i];
+            String append = Integer.toHexString(num);
+            if (append.length() == 1) {
+                append = "0" + append;
+            }
+            hash.append(append);
+        }
+        return hash + "";
     }
 
     //read methods
