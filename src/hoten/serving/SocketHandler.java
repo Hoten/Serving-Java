@@ -57,29 +57,31 @@ public abstract class SocketHandler {
     }
 
     public void send(ByteArray message) {
-        byte[] b = message.getBytes();
-        int messageLength = b.length;
-        int type = message.getType();
-        try {
-            synchronized (out) {
-                if (OUT_MSG_SIZE == DATA_SIZE.INT) {
-                    out.writeInt(messageLength);
-                } else if (OUT_MSG_SIZE == DATA_SIZE.SHORT) {
-                    out.writeShort(messageLength);
-                } else if (OUT_MSG_SIZE == DATA_SIZE.BYTE) {
-                    out.writeByte(messageLength);
+        if (isOpen) {
+            byte[] b = message.getBytes();
+            int messageLength = b.length;
+            int type = message.getType();
+            try {
+                synchronized (out) {
+                    if (OUT_MSG_SIZE == DATA_SIZE.INT) {
+                        out.writeInt(messageLength);
+                    } else if (OUT_MSG_SIZE == DATA_SIZE.SHORT) {
+                        out.writeShort(messageLength);
+                    } else if (OUT_MSG_SIZE == DATA_SIZE.BYTE) {
+                        out.writeByte(messageLength);
+                    }
+                    if (OUT_MSG_TYPE == DATA_SIZE.INT) {
+                        out.writeInt(type);
+                    } else if (OUT_MSG_TYPE == DATA_SIZE.SHORT) {
+                        out.writeShort(type);
+                    } else if (OUT_MSG_TYPE == DATA_SIZE.BYTE) {
+                        out.writeByte(type);
+                    }
+                    out.write(b);
                 }
-                if (OUT_MSG_TYPE == DATA_SIZE.INT) {
-                    out.writeInt(type);
-                } else if (OUT_MSG_TYPE == DATA_SIZE.SHORT) {
-                    out.writeShort(type);
-                } else if (OUT_MSG_TYPE == DATA_SIZE.BYTE) {
-                    out.writeByte(type);
-                }
-                out.write(b);
+            } catch (IOException ex) {
+                close();
             }
-        } catch (IOException ex) {
-            close();
         }
     }
 
