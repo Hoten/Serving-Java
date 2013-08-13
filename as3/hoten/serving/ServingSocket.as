@@ -1,4 +1,4 @@
-package {
+package hoten.serving {
 	import flash.errors.*;
 	import flash.events.*;
 	import flash.net.Socket;
