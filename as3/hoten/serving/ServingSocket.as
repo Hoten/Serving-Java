@@ -1,4 +1,12 @@
 package hoten.serving {
+	/**
+	 * ServingSocket.as
+	 * 
+	 * Processes data coming from a server, and passes off the data it reads to an external function.
+	 * 
+	 * @author Hoten
+	 */
+	
 	import flash.errors.*;
 	import flash.events.*;
 	import flash.net.Socket;
@@ -24,7 +32,7 @@ package hoten.serving {
 				trace(e);
 			}
 		}
-
+		
 		private function readResponse(e:ProgressEvent):void {
 			while (true) {
 				if (bytesAvailable >= 4 && curBuffer == -1) curBuffer = readInt();
@@ -37,6 +45,5 @@ package hoten.serving {
 				}else break;
 			}
 		}
-
 	}
 }
