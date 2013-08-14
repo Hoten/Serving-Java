@@ -15,6 +15,8 @@ import java.net.Socket;
  */
 public abstract class SocketHandler {
 
+    final private static int MAX_MSG_LENGTH = (2 << 23) - 1;
+    final private static int MAX_TYPE = (2 << 8) - 1;
     final private Socket socket;
     final private DataInputStream in;
     final private DataOutputStream out;
@@ -39,10 +41,20 @@ public abstract class SocketHandler {
             byte[] b = message.getBytes();
             int messageLength = b.length;
             int type = message.getType();
+            if (messageLength > MAX_MSG_LENGTH) {
+                System.out.println("Message is too big! " + messageLength);
+                return;
+            }
+            if (type > MAX_TYPE) {
+                System.out.println("Type it too high! " + type);
+                return;
+            }
             try {
                 synchronized (out) {
-                    out.writeInt(messageLength);
-                    out.writeShort(type);
+                    out.write(type);
+                    out.write(messageLength >> 16);
+                    out.write(messageLength >> 8);
+                    out.write(messageLength);
                     out.write(b);
                 }
             } catch (IOException ex) {
@@ -67,8 +79,8 @@ public abstract class SocketHandler {
     private void handleData() {
         try {
             //read the buffer and message type
-            int buffer = in.readInt();
-            int type = in.readShort();
+            int type = in.read();
+            int buffer = (in.read() << 16) + (in.read() << 8) + in.read();
 
             //load the data into a byte array
             //DataInputStream must read in chunks until the entire message is read
