@@ -25,7 +25,7 @@ package hoten.serving {
 		public function write(msg:ServerMessage):void {
 			try {
 				writeInt(msg.length);
-				writeByte(msg.id);
+				writeShort(msg.id);
 				writeBytes(msg);
 				flush();
 			} catch (e:IOError) {
