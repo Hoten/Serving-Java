@@ -97,7 +97,12 @@ public abstract class SocketHandler {
                 if (avail + bytesLoaded > buffer) {
                     avail = buffer - bytesLoaded;
                 }
-                in.read(bytes, bytesLoaded, avail);
+
+                //if eos, kill
+                if (in.read(bytes, bytesLoaded, avail) == -1) {
+                    close();
+                    return;
+                }
                 bytesLoaded += avail;
             } while (bytesLoaded < buffer);
 
