@@ -24,8 +24,10 @@ package hoten.serving {
 		
 		public function write(msg:ServerMessage):void {
 			try {
-				writeInt(msg.length);
-				writeShort(msg.id);
+				writeByte(msg.length >> 16);
+                writeByte(msg.length >> 8);
+                writeByte(msg.length);
+                writeByte(msg.id);
 				writeBytes(msg);
 				flush();
 			} catch (e:IOError) {
@@ -35,9 +37,9 @@ package hoten.serving {
 		
 		private function readResponse(e:ProgressEvent):void {
 			while (true) {
-				if (bytesAvailable >= 4 && curBuffer == -1) curBuffer = readInt();
-				if (bytesAvailable >= curBuffer + 2 && curBuffer != -1) {
-					var msg:ServerMessage = new ServerMessage(readShort());
+				if (bytesAvailable >= 4 && curBuffer == -1) curBuffer = (readUnsignedByte() << 16) + (readUnsignedByte() << 8) + readUnsignedByte();
+				if (bytesAvailable >= curBuffer + 1 && curBuffer != -1) {
+					var msg:ServerMessage = new ServerMessage(readUnsignedByte());
 					if (curBuffer > 0) readBytes(msg, 0, curBuffer);
 					handleData(msg);
 					curBuffer = -1;

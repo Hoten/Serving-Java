@@ -51,10 +51,10 @@ public abstract class SocketHandler {
             }
             try {
                 synchronized (out) {
-                    out.write(type);
                     out.write(messageLength >> 16);
                     out.write(messageLength >> 8);
                     out.write(messageLength);
+                    out.write(type);
                     out.write(b);
                 }
             } catch (IOException ex) {
@@ -79,8 +79,14 @@ public abstract class SocketHandler {
     private void handleData() {
         try {
             //read the buffer and message type
-            int type = in.read();
             int buffer = (in.read() << 16) + (in.read() << 8) + in.read();
+            int type = in.read();
+
+            //if eos, kill
+            if (type == -1) {
+                close();
+                return;
+            }
 
             //load the data into a byte array
             //DataInputStream must read in chunks until the entire message is read
