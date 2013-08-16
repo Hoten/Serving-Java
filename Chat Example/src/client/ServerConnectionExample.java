@@ -24,7 +24,8 @@ public class ServerConnectionExample extends SocketHandler {
     final public static int PRIVATE_CHAT_MESSAGE = 4;
     final public static int PRINT = 5;
     final public static int HASHES = 6;
-    final public static int NEW_FILES = 7;
+    final public static int NEW_FILE = 7;
+    final public static int FINISHED_UPDATING = 8;
 
     public ServerConnectionExample(Socket socket) throws IOException {
         super(socket);
@@ -61,15 +62,15 @@ public class ServerConnectionExample extends SocketHandler {
                     msg.send();
                 }
                 break;
-            case NEW_FILES:
-                System.out.println("Downloading new files...");
-                while (reader.getBytesAvailable() > 0) {
-                    String fileName = reader.readUTF();
-                    int len = reader.readInt();
-                    byte[] b = reader.readBytes(len);
-                    System.out.println("Downloading " + fileName + ", size = " + len);
-                    ByteArray.saveAs(new File("localdata" + File.separator + fileName), b);
-                }
+            case NEW_FILE:
+                System.out.println("Downloading new file...");
+                String fileName = reader.readUTF();
+                int len = reader.readInt();
+                byte[] b = reader.readBytes(len);
+                System.out.println("Downloading " + fileName + ", size = " + len);
+                ByteArray.saveAs(new File("localdata" + File.separator + fileName), b);
+                break;
+            case FINISHED_UPDATING:
                 readWelcomeMesssage();
                 break;
         }

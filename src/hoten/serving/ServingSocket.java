@@ -80,18 +80,26 @@ public abstract class ServingSocket extends Thread {
         clientDataHashes.trim();
     }
 
-    public ByteArray getFilesForClient(ByteArray requests) {
-        ByteArray ba = new ByteArray();
+    //send each file in it's own ByteArray message
+    public int getFilesForClient(ByteArray requests, SocketHandler client, int newFileType, int finishedType) {
+        int numSent = 0;
         while (requests.getBytesAvailable() > 0) {
             String fileName = requests.readUTF();
+            ByteArray ba = new ByteArray();
+            ba.setType(newFileType);
             ByteArray fileBytes = ByteArray.readFromFile(new File(clientDataFolder, fileName));
             ba.writeUTF(fileName);
             ba.writeInt(fileBytes.getSize());
             ba.writeBytes(fileBytes);
+            ba.trim();
+            //ba.compress();
+            client.send(ba);
+            numSent++;
         }
-        ba.trim();
-        //ba.compress();
-        return ba;
+        ByteArray ba = new ByteArray();
+        ba.setType(finishedType);
+        client.send(ba);
+        return numSent;
     }
 
     public ByteArray getClientDataHashes() {

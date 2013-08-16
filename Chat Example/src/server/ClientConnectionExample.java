@@ -62,9 +62,7 @@ public class ClientConnectionExample extends SocketHandler {
                 server.sendToClientWithUsername(msg, to);
                 break;
             case REQUEST_FILE_UPDATES:
-                msg = server.getFilesForClient(reader);
-                msg.setType(ServerConnectionExample.NEW_FILES);
-                send(msg);
+                server.getFilesForClient(reader, this, ServerConnectionExample.NEW_FILE, ServerConnectionExample.FINISHED_UPDATING);
                 break;
         }
     }
