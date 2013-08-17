@@ -69,14 +69,18 @@ public class ByteArray {
     }
 
     public static ByteArray readFromFile(File file) {
+        byte[] bytes = readFromFileAsRawArray(file);
+        return bytes == null ? null : new ByteArray(bytes);
+    }
+
+    public static byte[] readFromFileAsRawArray(File file) {
         DataInputStream dis = null;
         try {
             byte[] fileData = new byte[(int) file.length()];
             dis = new DataInputStream(new FileInputStream(file));
             dis.readFully(fileData);
             dis.close();
-            ByteArray ba = new ByteArray(fileData);
-            return ba;
+            return fileData;
         } catch (IOException ex) {
             Logger.getLogger(ByteArray.class.getName()).log(Level.SEVERE, null, ex);
         } finally {
@@ -121,6 +125,14 @@ public class ByteArray {
 
     public int getType() {
         return type;
+    }
+
+    public int getPos() {
+        return pos;
+    }
+
+    public void setPos(int pos) {
+        this.pos = pos;
     }
 
     //set the position to the begining. use before reading data
@@ -182,7 +194,7 @@ public class ByteArray {
         byte[] utf_bytes = readBytes(length);
         return new String(utf_bytes, 0, length);
     }
-    
+
     public String readUTFBytes(int len) {
         byte[] utf_bytes = readBytes(len);
         return new String(utf_bytes, 0, len);

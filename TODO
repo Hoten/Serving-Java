@@ -1,1 +1,2 @@
 *Handle file transfers implicitly i.e. don't leave it up to the implementing program
+    **MOSTLY DONE - just need to update the server code for as3. as of this commit, as3 clients won't work

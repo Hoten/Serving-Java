@@ -2,32 +2,34 @@ package server;
 
 import client.ServerConnectionExample;
 import hoten.serving.ByteArray;
-import hoten.serving.SocketHandler;
+import hoten.serving.ClientConnectionHandler;
 import java.io.IOException;
 import java.net.Socket;
 
 /**
  * Client.java
  *
- * Extends SocketHandler, and provides the logic for dealing with data from
- * clients.
+ * Extends ClientConnectionHandler, and provides the logic for dealing with data
+ * from clients.
  *
  * @author Hoten
  */
-public class ClientConnectionExample extends SocketHandler {
+public class ClientConnectionExample extends ClientConnectionHandler {
 
     final public static int SET_USERNAME = 1;
     final public static int CHAT_MESSAGE = 2;
     final public static int LOGOFF = 3;
     final public static int PRIVATE_MESSAGE = 4;
-    final public static int REQUEST_FILE_UPDATES = 5;
     final private ServingSocketExample server;
     private String username = null;
 
     public ClientConnectionExample(ServingSocketExample server, Socket socket) throws IOException {
         super(socket);
         this.server = server;
-        send(server.getClientDataHashes());
+    }
+
+    @Override
+    protected void onConnectionSettled() throws IOException {
         sendWhosOnline();
     }
 
@@ -60,9 +62,6 @@ public class ClientConnectionExample extends SocketHandler {
                 msg.writeUTF(username);
                 msg.writeUTF(reader.readUTF());
                 server.sendToClientWithUsername(msg, to);
-                break;
-            case REQUEST_FILE_UPDATES:
-                server.getFilesForClient(reader, this, ServerConnectionExample.NEW_FILE, ServerConnectionExample.FINISHED_UPDATING);
                 break;
         }
     }

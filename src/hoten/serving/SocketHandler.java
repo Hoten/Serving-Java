@@ -13,24 +13,28 @@ import java.net.Socket;
  *
  * @author Hoten
  */
-public abstract class SocketHandler {
+abstract class SocketHandler {
 
-    final private static int MAX_MSG_LENGTH = (2 << 23) - 1;
-    final private static int MAX_TYPE = (2 << 8) - 1;
-    final private Socket socket;
-    final private DataInputStream in;
-    final private DataOutputStream out;
-    private boolean isOpen;
+    final static int MAX_MSG_LENGTH = (2 << 23) - 1;
+    final static int MAX_TYPE = (2 << 8) - 1;
+    final Socket socket;
+    final DataInputStream in;
+    final DataOutputStream out;
+    boolean isOpen;
 
     public SocketHandler(Socket socket) throws IOException {
         this.socket = socket;
         in = new DataInputStream(socket.getInputStream());
         out = new DataOutputStream(socket.getOutputStream());
         isOpen = true;
-        startReadingThread();
     }
 
+    //this function is called after all files have been updated
+    protected abstract void onConnectionSettled() throws IOException;
+
     protected abstract void handleData(ByteArray reader) throws IOException;
+
+    abstract void startReadingThread();
 
     final public boolean isOpen() {
         return isOpen;
@@ -119,14 +123,9 @@ public abstract class SocketHandler {
         }
     }
 
-    private void startReadingThread() {
-        new Thread("handle data for: " + socket.getInetAddress()) {
-            @Override
-            public void run() {
-                while (isOpen) {
-                    handleData();
-                }
-            }
-        }.start();
+    void processDataUntilClosed() {
+        while (isOpen) {
+            handleData();
+        }
     }
 }
