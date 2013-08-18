@@ -19,7 +19,7 @@ import java.util.Iterator;
 public class ServingSocketExample extends ServingSocket {
 
     public ServingSocketExample(int port) throws IOException {
-        super(port, 500, new File("clientdata"));
+        super(port, 500, new File("clientdata"), "localdata");
     }
 
     public void sendToClientWithUsername(ByteArray msg, String username) {

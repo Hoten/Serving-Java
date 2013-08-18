@@ -26,6 +26,7 @@ public abstract class ServingSocket extends Thread {
     final private ServerSocket socket;
     final protected CopyOnWriteArrayList<ClientConnectionHandler> clients = new CopyOnWriteArrayList();
     private File clientDataFolder;
+    private String localDataFolderName;
     private byte[] clientDataHashes;
     private boolean open;
 
@@ -47,9 +48,10 @@ public abstract class ServingSocket extends Thread {
     }
 
     //use this constructor if you want to transfer data files to clients
-    public ServingSocket(int port, int heatbeatDelay, File clientDataFolder) throws IOException {
+    public ServingSocket(int port, int heatbeatDelay, File clientDataFolder, String localDataFolderName) throws IOException {
         this(port, heatbeatDelay);
         this.clientDataFolder = clientDataFolder;
+        this.localDataFolderName = localDataFolderName;
 
         if (!clientDataFolder.exists()) {
             clientDataFolder.mkdirs();
@@ -112,10 +114,12 @@ public abstract class ServingSocket extends Thread {
                 DataInputStream in = newClient.in;
                 DataOutputStream out = newClient.out;
 
+                out.writeUTF(localDataFolderName);
+
                 //send hash info
                 if (clientDataHashes != null) {
                     out.write(clientDataHashes);
-                }else{
+                } else {
                     out.writeInt(0);
                 }
 

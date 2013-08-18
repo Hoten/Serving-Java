@@ -11,13 +11,15 @@ import java.util.logging.Logger;
 
 /**
  * ServerConnectionHandler.java
- * 
- * Extend this class to handle data from the server client-side. See chat example
- * for more details.
+ *
+ * Extend this class to handle data from the server client-side. See chat
+ * example for more details.
  *
  * @author Hoten
  */
 public abstract class ServerConnectionHandler extends SocketHandler {
+
+    private File localDataFolder;
 
     public ServerConnectionHandler(Socket socket) throws IOException {
         super(socket);
@@ -30,6 +32,8 @@ public abstract class ServerConnectionHandler extends SocketHandler {
             @Override
             public void run() {
                 try {
+                    String localDataFolderName = in.readUTF();
+                    localDataFolder = new File(localDataFolderName);
                     processFileUpdatesClientside();
                     onConnectionSettled();
                     processDataUntilClosed();
@@ -49,7 +53,7 @@ public abstract class ServerConnectionHandler extends SocketHandler {
             byte[] b = new byte[len];
             in.read(b);
             System.out.println("Updating " + fileName + ", size = " + len);
-            ByteArray.saveAs(new File("localdata" + File.separator + fileName), b);
+            ByteArray.saveAs(new File(localDataFolder, fileName), b);
         }
         out.write(0);//done updating files
     }
@@ -97,7 +101,7 @@ public abstract class ServerConnectionHandler extends SocketHandler {
         for (int i = 0; i < numFiles; i++) {
             String fileName = in.readUTF();
             String fileHash = in.readUTF();
-            File f = new File("localdata" + File.separator + fileName);
+            File f = new File(localDataFolder, fileName);
 
             //remove this file as a candidate for pruning
             for (File cf : currentf) {

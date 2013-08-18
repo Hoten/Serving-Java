@@ -50,7 +50,7 @@ abstract class SocketHandler {
                 return;
             }
             if (type > MAX_TYPE) {
-                System.out.println("Type it too high! " + type);
+                System.out.println("Type is too high! " + type);
                 return;
             }
             try {
