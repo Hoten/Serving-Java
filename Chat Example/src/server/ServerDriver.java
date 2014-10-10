@@ -5,13 +5,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Date;
 
-/**
- * ServerDriver.java
- *
- * Starts the chat server.
- *
- * @author Hoten
- */
 public class ServerDriver {
 
     public static void main(String[] args) throws IOException, InterruptedException {

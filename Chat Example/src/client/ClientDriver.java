@@ -8,13 +8,6 @@ import java.util.Scanner;
 import java.util.concurrent.Executors;
 import server.ChatClientConnection;
 
-/**
- * ClientDriver.java
- *
- * Connects to server.
- *
- * @author Hoten
- */
 public class ClientDriver {
 
     private static ChatServerConnection serverConnection;

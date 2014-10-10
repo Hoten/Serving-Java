@@ -16,30 +16,6 @@ import java.util.zip.DataFormatException;
 import java.util.zip.Deflater;
 import java.util.zip.Inflater;
 
-/**
- * ByteArray.java
- *
- * Allows for easy reading and writing of data.
- *
- * For writing:
- *
- * For best performance, pass to the constructor an integer estimate of the
- * maximum expected size. However, not necessary. When getBytes() is called, the
- * internal byte array will be trimmed at the current position, thus trimming
- * the excess buffer. If the position becomes greater than the buffer
- * (bytes.length), then it is increased by a factor of (1 + loadFactor).
- *
- * For reading:
- *
- * Be sure to call rewind() before beginning any data processing.
- *
- * IN GENERAL, do not mix writing and reading with the same ByteArray object.
- * Call new ByteArray(writer.getBytes()) if for some reason you want to read
- * data you just wrote. ByteArray is meant for sending data over a network, so
- * there shouldn't be any need to do this.
- *
- * @author Hoten
- */
 public class ByteArray {
 
     public static void saveAs(File loc, ByteArray ba) {

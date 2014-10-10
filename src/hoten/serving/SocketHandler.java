@@ -5,14 +5,6 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 
-/**
- * SocketHandler.java
- *
- * Wrapper for a Socket. Allows for easy reading, writing, and processing of
- * data over a network.
- *
- * @author Hoten
- */
 public abstract class SocketHandler {
 
     final static int MAX_MSG_LENGTH = (2 << 23) - 1;

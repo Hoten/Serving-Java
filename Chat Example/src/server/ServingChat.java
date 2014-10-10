@@ -8,14 +8,6 @@ import java.io.IOException;
 import java.net.Socket;
 import java.util.Iterator;
 
-/**
- * ServingSocketExample.java
- *
- * Passes new chat connections (ClientConnectionExample) to the server code, and
- * provides additional server infrastructure.
- *
- * @author Hoten
- */
 public class ServingChat extends ServingSocket<ChatClientConnection> {
 
     public ServingChat(int port, String clientDataDirName, String localDataDirName) throws IOException {

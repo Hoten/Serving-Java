@@ -12,14 +12,6 @@ import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- * ServerConnectionHandler.java
- *
- * Extend this class to handle data from the server client-side. See chat
- * example for more details.
- *
- * @author Hoten
- */
 public abstract class ServerConnectionHandler extends SocketHandler {
 
     public final File localDataFolder;

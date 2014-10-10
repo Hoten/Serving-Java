@@ -5,14 +5,6 @@ import hoten.serving.ServerConnectionHandler;
 import java.io.IOException;
 import java.net.Socket;
 
-/**
- * Client.java
- *
- * Extends ServerConnectionHandler, and provides the logic for dealing with data
- * from the server.
- *
- * @author Hoten
- */
 public class ChatServerConnection extends ServerConnectionHandler {
 
     final public static int PEER_JOIN = 1;

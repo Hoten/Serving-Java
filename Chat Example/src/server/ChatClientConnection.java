@@ -6,14 +6,6 @@ import hoten.serving.SocketHandler;
 import java.io.IOException;
 import java.net.Socket;
 
-/**
- * Client.java
- *
- * Extends ClientConnectionHandler, and provides the logic for dealing with data
- * from clients.
- *
- * @author Hoten
- */
 public class ChatClientConnection extends SocketHandler {
 
     final public static int SET_USERNAME = 1;

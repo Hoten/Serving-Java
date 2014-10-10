@@ -18,14 +18,6 @@ import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- * ServingSocket.java
- *
- * Extend this class to act as a server. See the chat example.
- *
- * @author Hoten
- * @param <T>
- */
 public abstract class ServingSocket<T extends SocketHandler> {
 
     private boolean _open;
