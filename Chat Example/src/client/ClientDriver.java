@@ -74,10 +74,8 @@ public class ClientDriver {
     }
 
     private static void readWelcomeMesssage() {
-        File f = new File("localdata" + File.separator + "welcome.txt");
+        File f = new File(serverConnection.localDataFolder, "welcome.txt");
         ByteArray ba = ByteArray.readFromFileAndRewind(f);
-        System.out.println();
-        System.out.println(ba.readUTFBytes(ba.getBytesAvailable()));
-        System.out.println();
+        System.out.println("\n" + ba.readUTFBytes(ba.getBytesAvailable()) + "\n");
     }
 }

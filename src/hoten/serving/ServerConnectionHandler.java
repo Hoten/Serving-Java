@@ -21,7 +21,7 @@ import java.util.logging.Logger;
  */
 public abstract class ServerConnectionHandler extends SocketHandler {
 
-    private final File localDataFolder;
+    public final File localDataFolder;
 
     public ServerConnectionHandler(Socket socket) throws IOException {
         super(socket);

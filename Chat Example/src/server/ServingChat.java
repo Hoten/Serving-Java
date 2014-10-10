@@ -18,8 +18,8 @@ import java.util.Iterator;
  */
 public class ServingChat extends ServingSocket<ChatClientConnection> {
 
-    public ServingChat(int port) throws IOException {
-        super(port, 500, new File("clientdata"), "localdata");
+    public ServingChat(int port, String clientDataDirName, String localDataDirName) throws IOException {
+        super(port, 500, new File(clientDataDirName), localDataDirName);
     }
 
     public void sendToClientWithUsername(ByteArray msg, String username) {
