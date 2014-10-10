@@ -21,7 +21,7 @@ public class ServerDriver {
         ByteArray.saveAs(new File("clientdata" + File.separator + "welcome.txt"), welcomeMessage);
 
         ServingSocketExample server = new ServingSocketExample(1234);
-        server.start();
+        server.startServer();
         System.out.println("Server started.");
     }
 }

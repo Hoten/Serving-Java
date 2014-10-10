@@ -2,11 +2,8 @@ package client;
 
 import hoten.serving.ByteArray;
 import hoten.serving.ServerConnectionHandler;
-import java.io.File;
 import java.io.IOException;
 import java.net.Socket;
-import java.util.Scanner;
-import server.ClientConnectionExample;
 
 /**
  * Client.java
@@ -29,57 +26,6 @@ public class ServerConnectionExample extends ServerConnectionHandler {
     }
 
     @Override
-    protected void onConnectionSettled() throws IOException {
-        System.out.println("Connection made.");
-
-        readWelcomeMesssage();
-
-        System.out.print("Enter your username (no spaces): ");
-        final Scanner s = new Scanner(System.in);
-        String username = s.next();
-        s.nextLine();
-
-        ByteArray msg = new ByteArray();
-        msg.setType(ClientConnectionExample.SET_USERNAME);
-        msg.writeUTF(username);
-        msg.send();
-
-        new Thread("chat input") {
-            @Override
-            public void run() {
-                ByteArray msg;
-                while (true) {
-                    String line = s.nextLine();
-                    if (line.startsWith("/")) {
-                        String[] split = line.split(" ", 2);
-                        if (split.length != 2) {
-                            continue;
-                        }
-                        String to = split[0].substring(1);
-                        String whisper = split[1];
-                        msg = new ByteArray();
-                        msg.setType(ClientConnectionExample.PRIVATE_MESSAGE);
-                        msg.writeUTF(to);
-                        msg.writeUTF(whisper);
-                        msg.send();
-                    } else if (line.equalsIgnoreCase("quit")) {
-                        msg = new ByteArray();
-                        msg.setType(ClientConnectionExample.LOGOFF);
-                        msg.send();
-                        break;
-                    } else {
-                        msg = new ByteArray();
-                        msg.setType(ClientConnectionExample.CHAT_MESSAGE);
-                        msg.writeUTF(line);
-                        msg.send();
-                    }
-                }
-                close();
-            }
-        }.start();
-    }
-
-    @Override
     protected void handleData(ByteArray reader) throws IOException {
         int type = reader.getType();
         switch (type) {
@@ -99,13 +45,5 @@ public class ServerConnectionExample extends ServerConnectionHandler {
                 System.out.println(reader.readUTF());
                 break;
         }
-    }
-
-    private void readWelcomeMesssage() {
-        File f = new File("localdata" + File.separator + "welcome.txt");
-        ByteArray ba = ByteArray.readFromFileAndRewind(f);
-        System.out.println();
-        System.out.println(ba.readUTFBytes(ba.getBytesAvailable()));
-        System.out.println();
     }
 }

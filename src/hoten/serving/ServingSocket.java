@@ -7,11 +7,15 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Stack;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * ServingSocket.java
@@ -19,49 +23,106 @@ import java.util.concurrent.TimeUnit;
  * Extend this class to act as a server. See the chat example.
  *
  * @author Hoten
+ * @param <T>
  */
-public abstract class ServingSocket extends Thread {
+public abstract class ServingSocket<T extends SocketHandler> {
 
-    private ScheduledExecutorService heartbeatScheduler = Executors.newScheduledThreadPool(1);
-    final private ServerSocket socket;
-    final protected CopyOnWriteArrayList<ClientConnectionHandler> clients = new CopyOnWriteArrayList();
-    private File clientDataFolder;
-    private String localDataFolderName;
-    private byte[] clientDataHashes;
-    private boolean open;
+    private boolean _open;
+    final private ScheduledExecutorService _heartbeatScheduler = Executors.newScheduledThreadPool(1);
+    final private ServerSocket _socket;
+    final private File _clientDataFolder;
+    final private String _localDataFolderName;
+    final private byte[] _clientDataHashes;
+    final protected List<T> _clients = new CopyOnWriteArrayList();
 
-    public ServingSocket(int port, int heatbeatDelay) throws IOException {
-        super("Serving Socket " + port);
-        socket = new ServerSocket(port);
-        clientDataHashes = null;
-
-        //start heartbeat
-        final ByteArray msg = new ByteArray();
-        msg.setType(0);
-        final Runnable heartbeat = new Runnable() {
-            @Override
-            public void run() {
-                sendToAll(msg);
-            }
-        };
-        heartbeatScheduler.scheduleAtFixedRate(heartbeat, heatbeatDelay, heatbeatDelay, TimeUnit.MILLISECONDS);
+    public ServingSocket(int port, int heartbeatDelay, File clientDataFolder, String localDataFolderName) throws IOException {
+        _clientDataFolder = clientDataFolder;
+        _localDataFolderName = localDataFolderName;
+        _clientDataHashes = hashFiles();
+        _socket = new ServerSocket(port);
+        startHeartbeat(heartbeatDelay);
+    }
+    
+    public ServingSocket(int port, int heartbeatDelay) throws IOException {
+        this(port, heartbeatDelay, null, null);
     }
 
-    //use this constructor if you want to transfer data files to clients
-    public ServingSocket(int port, int heatbeatDelay, File clientDataFolder, String localDataFolderName) throws IOException {
-        this(port, heatbeatDelay);
-        this.clientDataFolder = clientDataFolder;
-        this.localDataFolderName = localDataFolderName;
+    protected abstract T makeNewConnection(Socket newConnection) throws IOException;
 
-        if (!clientDataFolder.exists()) {
-            clientDataFolder.mkdirs();
+    public void startServer() {
+        ExecutorService exec = Executors.newCachedThreadPool();
+        exec.execute(() -> {
+            while (true) {
+                try {
+                    T newClient = makeNewConnection(_socket.accept());
+                    newClient._out.writeUTF(_localDataFolderName);
+                    sendFileHashes(newClient._out);
+                    sendRequestedFiles(newClient._in, newClient._out);
+                    newClient._onConnectionSettled.run();
+                    exec.execute(newClient::processDataUntilClosed);
+                    _clients.add(newClient);
+                } catch (IOException ex) {
+                    Logger.getLogger(ServingSocket.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        });
+        _open = true;
+    }
+
+    public void sendToAll(ByteArray msg) {
+        _clients.stream().forEach((c) -> {
+            c.send(msg);
+        });
+    }
+
+    public void sendToAllBut(ByteArray msg, SocketHandler client) {
+        _clients.stream().filter((c) -> (c != client)).forEach((c) -> {
+            c.send(msg);
+        });
+    }
+
+    public void removeClient(T client) {
+        _clients.remove(client);
+    }
+
+    public void close() {
+        _clients.stream().forEach((c) -> {
+            c.close();
+        });
+        _open = false;
+    }
+
+    private void sendFileHashes(DataOutputStream out) throws IOException {
+        if (_clientDataHashes != null) {
+            out.write(_clientDataHashes);
+        } else {
+            out.writeInt(0);
+        }
+    }
+
+    private void sendRequestedFiles(DataInputStream in, DataOutputStream out) throws IOException {
+        int numFilesToUpdate = in.readInt();
+        out.writeInt(numFilesToUpdate);
+        for (int i = 0; i < numFilesToUpdate; i++) {
+            String fname = in.readUTF();
+            byte[] fileBytes = ByteArray.readFromFileAsRawArray(new File(_clientDataFolder, fname));
+            out.writeUTF(fname);
+            out.writeInt(fileBytes.length);
+            out.write(fileBytes);
+        }
+        in.read();//stall until client is done
+    }
+
+    private byte[] hashFiles() {
+        if (!_clientDataFolder.exists()) {
+            _clientDataFolder.mkdirs();
         }
 
         //build the hashes
         ByteArray hashes = new ByteArray();
         hashes.writeInt(0);//placeholder
         Stack<File> a = new Stack();
-        a.addAll(Arrays.asList(clientDataFolder.listFiles()));
+        a.addAll(Arrays.asList(_clientDataFolder.listFiles()));
         int numFiles = 0;
         while (!a.isEmpty()) {
             File cur = a.pop();
@@ -74,7 +135,7 @@ public abstract class ServingSocket extends Thread {
 
                 //build the relative path to the clientDataFolder
                 //TODO use stringbuilder. find a way to do it when adding to begining
-                while ((f = f.getParentFile()) != null && !f.equals(clientDataFolder)) {
+                while ((f = f.getParentFile()) != null && !f.equals(_clientDataFolder)) {
                     path = f.getName() + File.separator + path;
                 }
 
@@ -87,76 +148,15 @@ public abstract class ServingSocket extends Thread {
         hashes.setPos(0);
         hashes.writeInt(numFiles);
         hashes.setPos(eof);
-        clientDataHashes = hashes.getBytes();
+        return hashes.getBytes();
     }
 
-    public void sendToAll(ByteArray msg) {
-        for (SocketHandler c : clients) {
-            c.send(msg);
-        }
+    private void startHeartbeat(int heartbeatDelay) {
+        final ByteArray msg = new ByteArray();
+        msg.setType(0);
+        final Runnable heartbeat = () -> {
+            sendToAll(msg);
+        };
+        _heartbeatScheduler.scheduleAtFixedRate(heartbeat, heartbeatDelay, heartbeatDelay, TimeUnit.MILLISECONDS);
     }
-
-    public void sendToAllBut(ByteArray msg, ClientConnectionHandler client) {
-        for (SocketHandler c : clients) {
-            if (c != client) {
-                c.send(msg);
-            }
-        }
-    }
-
-    @Override
-    public void run() {
-        open = true;
-        while (open) {
-            try {
-                ClientConnectionHandler newClient = makeNewConnection(socket.accept());
-
-                DataInputStream in = newClient.in;
-                DataOutputStream out = newClient.out;
-
-                out.writeUTF(localDataFolderName);
-
-                //send hash info
-                if (clientDataHashes != null) {
-                    out.write(clientDataHashes);
-                } else {
-                    out.writeInt(0);
-                }
-
-                //handle file requests
-                int numFilesToUpdate = in.readInt();
-                for (int i = 0; i < numFilesToUpdate; i++) {
-                    String fname = in.readUTF();
-                    byte[] fileBytes = ByteArray.readFromFileAsRawArray(new File(clientDataFolder, fname));
-                    out.writeUTF(fname);
-                    out.writeInt(fileBytes.length);
-                    out.write(fileBytes);
-                }
-                in.read();//stall until client is done
-
-                newClient.startReadingThread();
-                clients.add(newClient);
-            } catch (IOException ex) {
-                System.out.println("error making new connection: " + ex);
-            }
-        }
-        try {
-            socket.close();
-        } catch (IOException ex) {
-            System.out.println("error closing server: " + ex);
-        }
-    }
-
-    public void close() {
-        for (SocketHandler c : clients) {
-            c.close();
-        }
-        open = false;
-    }
-
-    public void removeClient(ClientConnectionHandler client) {
-        clients.remove(client);
-    }
-
-    protected abstract ClientConnectionHandler makeNewConnection(Socket newConnection) throws IOException;
 }
