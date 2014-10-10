@@ -1,5 +1,6 @@
 package hoten.serving;
 
+import java.io.DataInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.net.Socket;
@@ -32,7 +33,6 @@ public abstract class ServerConnectionHandler extends SocketHandler {
     public void start() {
         Executors.newSingleThreadExecutor().execute(() -> {
             try {
-                System.out.println("respond to hashes");
                 respondToHashes();
                 readNewFilesFromServer();
                 _onConnectionSettled.run();
@@ -48,9 +48,9 @@ public abstract class ServerConnectionHandler extends SocketHandler {
         for (int i = 0; i < numFiles; i++) {
             String fileName = _in.readUTF();
             int len = _in.readInt();
+            Logger.getLogger(ServerConnectionHandler.class.getName()).log(Level.INFO, "Updating {0}, size = {1}", new Object[]{fileName, len});
             byte[] b = new byte[len];
-            _in.read(b);
-            System.out.println("Updating " + fileName + ", size = " + len);
+            _in.readFully(b);
             ByteArray.saveAs(new File(localDataFolder, fileName), b);
         }
         _out.write(0);//done updating files

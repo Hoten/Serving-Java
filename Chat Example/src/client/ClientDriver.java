@@ -27,12 +27,9 @@ public class ClientDriver {
     }
 
     private static void startChat() {
-        readWelcomeMesssage();
-
-        System.out.print("Enter your username (no spaces): ");
         final Scanner s = new Scanner(System.in);
-        String username = s.next();
-        s.nextLine();
+        String username = promptUsername(s);
+        readWelcomeMesssage();
 
         ByteArray msg = new ByteArray();
         msg.setType(ChatClientConnection.SET_USERNAME);
@@ -43,6 +40,13 @@ public class ClientDriver {
             while (processChatInput(s.nextLine()));
             serverConnection.close();
         });
+    }
+
+    private static String promptUsername(Scanner s) {
+        System.out.print("Enter your username (no spaces): ");
+        String username = s.next();
+        s.nextLine();
+        return username;
     }
 
     private static boolean processChatInput(String input) {
