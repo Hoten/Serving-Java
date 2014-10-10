@@ -6,7 +6,7 @@ import java.io.IOException;
 import java.net.Socket;
 import java.util.Scanner;
 import java.util.concurrent.Executors;
-import server.ClientConnectionExample;
+import server.ChatClientConnection;
 
 /**
  * ClientDriver.java
@@ -17,11 +17,11 @@ import server.ClientConnectionExample;
  */
 public class ClientDriver {
 
-    private static ServerConnectionExample serverConnection;
+    private static ChatServerConnection serverConnection;
 
     public static void main(String[] args) throws IOException, InterruptedException {
         System.out.println("Connecting to server...");
-        serverConnection = new ServerConnectionExample(new Socket("localhost", 1234));
+        serverConnection = new ChatServerConnection(new Socket("localhost", 1234));
         serverConnection.onConnectionSettled(ClientDriver::startChat);
         serverConnection.start();
     }
@@ -35,7 +35,7 @@ public class ClientDriver {
         s.nextLine();
 
         ByteArray msg = new ByteArray();
-        msg.setType(ClientConnectionExample.SET_USERNAME);
+        msg.setType(ChatClientConnection.SET_USERNAME);
         msg.writeUTF(username);
         msg.send();
 
@@ -55,18 +55,18 @@ public class ClientDriver {
             String to = split[0].substring(1);
             String whisper = split[1];
             msg = new ByteArray();
-            msg.setType(ClientConnectionExample.PRIVATE_MESSAGE);
+            msg.setType(ChatClientConnection.PRIVATE_MESSAGE);
             msg.writeUTF(to);
             msg.writeUTF(whisper);
             msg.send();
         } else if (input.equalsIgnoreCase("quit")) {
             msg = new ByteArray();
-            msg.setType(ClientConnectionExample.LOGOFF);
+            msg.setType(ChatClientConnection.LOGOFF);
             msg.send();
             return false;
         } else {
             msg = new ByteArray();
-            msg.setType(ClientConnectionExample.CHAT_MESSAGE);
+            msg.setType(ChatClientConnection.CHAT_MESSAGE);
             msg.writeUTF(input);
             msg.send();
         }

@@ -20,7 +20,7 @@ public class ServerDriver {
         welcomeMessage.writeUTFBytes("\nAnd this is when the server was started: " + new Date(System.currentTimeMillis()));
         ByteArray.saveAs(new File("clientdata" + File.separator + "welcome.txt"), welcomeMessage);
 
-        ServingSocketExample server = new ServingSocketExample(1234);
+        ServingChat server = new ServingChat(1234);
         server.startServer();
         System.out.println("Server started.");
     }
