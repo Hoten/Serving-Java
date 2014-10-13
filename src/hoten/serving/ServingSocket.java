@@ -18,7 +18,6 @@ import java.util.logging.Logger;
 
 public abstract class ServingSocket<T extends SocketHandler> {
 
-    private boolean _open;
     final private ScheduledExecutorService _heartbeatScheduler = Executors.newScheduledThreadPool(1);
     final private ServerSocket _socket;
     final private File _clientDataFolder;
@@ -57,7 +56,6 @@ public abstract class ServingSocket<T extends SocketHandler> {
                 }
             }
         });
-        _open = true;
     }
 
     public void sendTo(ByteArrayWriter msg, Predicate<T> selector) {
@@ -90,7 +88,6 @@ public abstract class ServingSocket<T extends SocketHandler> {
         _clients.stream().forEach((c) -> {
             c.close();
         });
-        _open = false;
     }
 
     private void sendFileHashes(DataOutputStream out) throws IOException {
