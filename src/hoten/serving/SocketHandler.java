@@ -9,8 +9,8 @@ import java.util.logging.Logger;
 
 public abstract class SocketHandler {
 
-    final static int MAX_MSG_LENGTH = (2 << 23) - 1;
-    final static int MAX_TYPE = (2 << 8) - 1;
+    final static int MAX_MSG_LENGTH = (1 << 24) - 1;
+    final static int MAX_TYPE = (1 << 9) - 1;
     final Socket _socket;
     final DataInputStream _in;
     final DataOutputStream _out;
