@@ -4,6 +4,8 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public abstract class SocketHandler {
 
@@ -28,10 +30,6 @@ public abstract class SocketHandler {
 
     protected abstract void handleData(ByteArrayReader reader) throws IOException;
 
-    final public boolean isOpen() {
-        return isOpen;
-    }
-    
     public void send(ByteArrayWriter writer) {
         send(writer.getType(), writer.toByteArray());
     }
@@ -42,11 +40,11 @@ public abstract class SocketHandler {
         }
         int messageLength = messageData.length;
         if (messageLength > MAX_MSG_LENGTH) {
-            System.out.println("Message is too big! " + messageLength);
+            Logger.getLogger(ServerConnectionHandler.class.getName()).log(Level.SEVERE, "Message is too big! {0}", messageLength);
             return;
         }
         if (messageType > MAX_TYPE) {
-            System.out.println("Type is too high! " + messageType);
+            Logger.getLogger(ServerConnectionHandler.class.getName()).log(Level.SEVERE, "Type is too high! {0}", messageType);
             return;
         }
         try {
@@ -78,41 +76,12 @@ public abstract class SocketHandler {
 
     private void handleData() {
         try {
-            //read the buffer and message type
             int buffer = (_in.read() << 16) + (_in.read() << 8) + _in.read();
             int type = _in.read();
-
-            //if eos, kill
-            if (type == -1) {
-                close();
-                return;
-            }
-
-            //load the data into a byte array
-            //DataInputStream must read in chunks until the entire message is read
             byte[] bytes = new byte[buffer];
-            int bytesLoaded = 0;
-            do {
-                int avail = _in.available();
-                if (avail + bytesLoaded > buffer) {
-                    avail = buffer - bytesLoaded;
-                }
-
-                //if eos, kill
-                if (_in.read(bytes, bytesLoaded, avail) == -1) {
-                    close();
-                    return;
-                }
-                bytesLoaded += avail;
-            } while (bytesLoaded < buffer);
-
-            //if it is not a heartbeat message...
-            if (type != 0) {
-                //pass the data through a reader and call a function to deal with it
-                ByteArrayReader reader = new ByteArrayReader(bytes);
-                reader.setType(type);
-                handleData(reader);
-            }
+            ByteArrayReader reader = new ByteArrayReader(bytes);
+            reader.setType(type);
+            handleData(reader);
         } catch (IOException ex) {
             close();
         }
@@ -122,5 +91,9 @@ public abstract class SocketHandler {
         while (isOpen) {
             handleData();
         }
+    }
+
+    final public boolean isOpen() {
+        return isOpen;
     }
 }
