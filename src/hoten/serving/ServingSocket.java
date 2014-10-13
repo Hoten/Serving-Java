@@ -127,21 +127,15 @@ public abstract class ServingSocket<T extends SocketHandler> {
     }
 
     private byte[] hashFiles() {
-        if (!_clientDataFolder.exists()) {
-            _clientDataFolder.mkdirs();
-        }
-
-        List<File> files = FileUtils.getAllFilesInDirectory(_clientDataFolder);
         ByteArrayWriter hashes = new ByteArrayWriter();
+        List<File> files = FileUtils.getAllFilesInDirectory(_clientDataFolder);
         hashes.writeInt(files.size());
         files.stream().forEach((file) -> {
-            ByteArrayReader reader = new ByteArrayReader(file);
             String relativePath = _clientDataFolder.toPath().relativize(file.toPath()).toString();
-            String hash = reader.getMD5Hash();
+            String hash = FileUtils.md5HashFile(file);
             hashes.writeUTF(relativePath);
             hashes.writeUTF(hash);
         });
-
         return hashes.toByteArray();
     }
 }

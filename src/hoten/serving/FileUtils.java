@@ -39,4 +39,14 @@ public class FileUtils {
             Logger.getLogger(FileUtils.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
+
+    public static void ensureDirectoryExists(File dir) {
+        if (!dir.exists()) {
+            dir.mkdirs();
+        }
+    }
+    
+    public static String md5HashFile(File file) {
+        return new ByteArrayReader(file).getMD5Hash();
+    }
 }
