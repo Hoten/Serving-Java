@@ -11,6 +11,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.logging.Level;
@@ -19,6 +20,7 @@ import java.util.logging.Logger;
 public abstract class ServingSocket<T extends SocketHandler> {
 
     final private ScheduledExecutorService _heartbeatScheduler = Executors.newScheduledThreadPool(1);
+    private ScheduledFuture _hearbeatFuture;
     final private ServerSocket _socket;
     final private File _clientDataFolder;
     final private String _localDataFolderName;
@@ -37,12 +39,15 @@ public abstract class ServingSocket<T extends SocketHandler> {
     }
 
     public void setHeartbeat(int heartbeatDelay) {
+        if (_hearbeatFuture != null) {
+            _hearbeatFuture.cancel(false);
+        }
         final ByteArrayWriter msg = new ByteArrayWriter();
         msg.setType(0);
         final Runnable heartbeat = () -> {
             sendToAll(msg);
         };
-        _heartbeatScheduler.scheduleAtFixedRate(heartbeat, heartbeatDelay, heartbeatDelay, TimeUnit.MILLISECONDS);
+        _hearbeatFuture = _heartbeatScheduler.scheduleAtFixedRate(heartbeat, heartbeatDelay, heartbeatDelay, TimeUnit.MILLISECONDS);
     }
 
     protected abstract T makeNewConnection(Socket newConnection) throws IOException;
