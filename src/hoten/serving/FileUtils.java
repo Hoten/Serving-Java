@@ -16,37 +16,27 @@ public class FileUtils {
     private FileUtils() {
     }
 
-    //todo: refactor
     public static List<File> getAllFilesInDirectory(File dir) {
         List<File> result = new ArrayList();
-        Stack<File> all = new Stack();
-        all.addAll(Arrays.asList(dir.listFiles()));
-        while (!all.isEmpty()) {
-            File cur = all.pop();
+        for (File cur : dir.listFiles()) {
             if (cur.isDirectory()) {
-                all.addAll(Arrays.asList(cur.listFiles()));
+                result.addAll(getAllFilesInDirectory(cur));
             } else {
                 result.add(cur);
             }
         }
         return result;
     }
-    
+
     public static void saveAs(File loc, ByteArrayWriter writer) {
         saveAs(loc, writer.toByteArray());
     }
 
     public static void saveAs(File loc, byte[] bytes) {
-        try {
-            FileOutputStream fos;
-            DataOutputStream dos;
-            loc.getParentFile().mkdirs();
+        loc.getParentFile().mkdirs();
+        try (FileOutputStream fos = new FileOutputStream(loc); DataOutputStream dos = new DataOutputStream(fos)) {
             loc.createNewFile();
-            fos = new FileOutputStream(loc);
-            dos = new DataOutputStream(fos);
             dos.write(bytes);
-            dos.close();
-            fos.close();
         } catch (IOException ex) {
             Logger.getLogger(FileUtils.class.getName()).log(Level.SEVERE, null, ex);
         }
