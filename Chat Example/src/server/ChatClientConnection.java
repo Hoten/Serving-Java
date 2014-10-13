@@ -57,6 +57,7 @@ public class ChatClientConnection extends SocketHandler {
     @Override
     public void close() {
         if (isOpen()) {
+            super.close();
             server.removeClient(this);
             if (username != null) {
                 ByteArrayWriter msg = new ByteArrayWriter();
@@ -64,7 +65,6 @@ public class ChatClientConnection extends SocketHandler {
                 msg.writeUTF(username);
                 server.sendToAllBut(msg, this);
             }
-            super.close();
         }
     }
 
