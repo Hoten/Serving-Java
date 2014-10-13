@@ -6,13 +6,13 @@ import hoten.serving.ServingSocket;
 import java.io.File;
 import java.io.IOException;
 import java.net.Socket;
-import java.util.Iterator;
 import java.util.stream.Collectors;
 
 public class ServingChat extends ServingSocket<ChatClientConnection> {
 
     public ServingChat(int port, String clientDataDirName, String localDataDirName) throws IOException {
-        super(port, 500, new File(clientDataDirName), localDataDirName);
+        super(port, new File(clientDataDirName), localDataDirName);
+        setHeartbeat(500);
     }
 
     public void sendToClientWithUsername(ByteArrayWriter msg, String username) {

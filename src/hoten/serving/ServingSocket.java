@@ -25,16 +25,24 @@ public abstract class ServingSocket<T extends SocketHandler> {
     final private byte[] _clientDataHashes;
     final protected List<T> _clients = new CopyOnWriteArrayList();
 
-    public ServingSocket(int port, int heartbeatDelay, File clientDataFolder, String localDataFolderName) throws IOException {
+    public ServingSocket(int port, File clientDataFolder, String localDataFolderName) throws IOException {
         _clientDataFolder = clientDataFolder;
         _localDataFolderName = localDataFolderName;
         _clientDataHashes = hashFiles();
         _socket = new ServerSocket(port);
-        startHeartbeat(heartbeatDelay);
     }
 
-    public ServingSocket(int port, int heartbeatDelay) throws IOException {
-        this(port, heartbeatDelay, null, null);
+    public ServingSocket(int port) throws IOException {
+        this(port, null, null);
+    }
+
+    public void setHeartbeat(int heartbeatDelay) {
+        final ByteArrayWriter msg = new ByteArrayWriter();
+        msg.setType(0);
+        final Runnable heartbeat = () -> {
+            sendToAll(msg);
+        };
+        _heartbeatScheduler.scheduleAtFixedRate(heartbeat, heartbeatDelay, heartbeatDelay, TimeUnit.MILLISECONDS);
     }
 
     protected abstract T makeNewConnection(Socket newConnection) throws IOException;
@@ -130,14 +138,5 @@ public abstract class ServingSocket<T extends SocketHandler> {
         });
 
         return hashes.toByteArray();
-    }
-
-    private void startHeartbeat(int heartbeatDelay) {
-        final ByteArrayWriter msg = new ByteArrayWriter();
-        msg.setType(0);
-        final Runnable heartbeat = () -> {
-            sendToAll(msg);
-        };
-        _heartbeatScheduler.scheduleAtFixedRate(heartbeat, heartbeatDelay, heartbeatDelay, TimeUnit.MILLISECONDS);
     }
 }
