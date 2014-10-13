@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.Socket;
 import java.util.Iterator;
+import java.util.stream.Collectors;
 
 public class ServingChat extends ServingSocket<ChatClientConnection> {
 
@@ -19,27 +20,12 @@ public class ServingChat extends ServingSocket<ChatClientConnection> {
     }
 
     public String whoIsOnline() {
-        StringBuilder builder = new StringBuilder();
-        builder.append("Users currently online:\n");
-        boolean any = false;
-
-        for (Iterator<ChatClientConnection> it = _clients.iterator(); it.hasNext();) {
-            ChatClientConnection c = (ChatClientConnection) it.next();
-            String un = c.getUsername();
-            if (un != null) {
-                any = true;
-                builder.append(un);
-            }
-            if (it.hasNext()) {
-                builder.append("\n");
-            }
+        if (_clients.isEmpty()) {
+            return "No users are online at the moment.";
         }
-
-        if (!any) {
-            builder.append("none (yet!)");
-        }
-
-        return builder.toString();
+        return "Users currently online:\n" + _clients.stream()
+                .map((c) -> c.getUsername())
+                .collect(Collectors.joining("\n"));
     }
 
     @Override
