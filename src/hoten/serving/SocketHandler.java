@@ -79,6 +79,7 @@ public abstract class SocketHandler {
             int buffer = (_in.read() << 16) + (_in.read() << 8) + _in.read();
             int type = _in.read();
             byte[] bytes = new byte[buffer];
+            _in.readFully(bytes);
             ByteArrayReader reader = new ByteArrayReader(bytes);
             reader.setType(type);
             handleData(reader);
