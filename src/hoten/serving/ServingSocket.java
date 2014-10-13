@@ -85,6 +85,7 @@ public abstract class ServingSocket<T extends SocketHandler> {
     }
 
     public void close() {
+        _heartbeatScheduler.shutdownNow();
         _clients.stream().forEach((c) -> {
             c.close();
         });
