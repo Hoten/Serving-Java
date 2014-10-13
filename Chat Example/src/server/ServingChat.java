@@ -1,7 +1,7 @@
 package server;
 
 import client.ChatServerConnection;
-import hoten.serving.ByteArray;
+import hoten.serving.ByteArrayWriter;
 import hoten.serving.ServingSocket;
 import java.io.File;
 import java.io.IOException;
@@ -14,13 +14,8 @@ public class ServingChat extends ServingSocket<ChatClientConnection> {
         super(port, 500, new File(clientDataDirName), localDataDirName);
     }
 
-    public void sendToClientWithUsername(ByteArray msg, String username) {
-        for (ChatClientConnection c : _clients) {
-            if (username.equals(c.getUsername())) {
-                c.send(msg);
-                break;
-            }
-        }
+    public void sendToClientWithUsername(ByteArrayWriter msg, String username) {
+        sendToFirst(msg, (c) -> username.equals(c.getUsername()));
     }
 
     public String whoIsOnline() {
@@ -48,10 +43,10 @@ public class ServingChat extends ServingSocket<ChatClientConnection> {
     }
 
     @Override
-    protected ChatClientConnection makeNewConnection(Socket newConnection) throws IOException {        
+    protected ChatClientConnection makeNewConnection(Socket newConnection) throws IOException {
         ChatClientConnection clientConnection = new ChatClientConnection(this, newConnection);
         clientConnection.onConnectionSettled(() -> {
-            ByteArray msg = new ByteArray();
+            ByteArrayWriter msg = new ByteArrayWriter();
             msg.setType(ChatServerConnection.PRINT);
             msg.writeUTF(whoIsOnline());
             clientConnection.send(msg);

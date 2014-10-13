@@ -1,75 +1,50 @@
 package hoten.serving;
 
 import java.util.Random;
-import org.junit.After;
-import org.junit.AfterClass;
 import static org.junit.Assert.*;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
-/**
- *
- * @author Connor
- */
 public class ByteArrayTest {
 
-    public ByteArrayTest() {
-    }
-
-    @BeforeClass
-    public static void setUpClass() {
-    }
-
-    @AfterClass
-    public static void tearDownClass() {
-    }
+    ByteArrayWriter _writer;
 
     @Before
     public void setUp() {
+        _writer = new ByteArrayWriter();
     }
 
-    @After
-    public void tearDown() {
-    }
-
-    public ByteArray getTestByteArray() {
-        ByteArray writer = new ByteArray();
-        Random r = new Random("ByteArray Test".hashCode());
-
-        writer.writeUTF("Hello World");
-        for (int i = 0; i < 1000; i++) {
-            writer.writeInt(r.nextInt());
-        }
-        for (int i = 0; i < 1000; i++) {
-            writer.writeShort(r.nextInt() >> 16);
-        }
-        for (int i = 0; i < 1000; i++) {
-            writer.writeByte(r.nextInt() >> 24);
-        }
-        for (int i = 0; i < 1000; i++) {
-            writer.writeFloat(Float.intBitsToFloat(r.nextInt()));
-        }
-        for (int i = 0; i < 1000; i++) {
-            writer.writeBoolean(r.nextBoolean());
-        }
-
-        writer.compress();
-
-        return writer;
+    private Random getRandom() {
+        return new Random("ByteArray Test".hashCode());
     }
 
     @Test
     public void testByteArray() {
-        ByteArray reader = getTestByteArray();
-        Random r = new Random("ByteArray Test".hashCode());
-        reader.rewind();
+        Random r = getRandom();
 
+        _writer.writeUTF("Hello World");
+        for (int i = 0; i < 1000; i++) {
+            _writer.writeInt(r.nextInt());
+        }
+        for (int i = 0; i < 1000; i++) {
+            _writer.writeShort(r.nextInt() >> 16);
+        }
+        for (int i = 0; i < 1000; i++) {
+            _writer.writeByte(r.nextInt() >> 24);
+        }
+        for (int i = 0; i < 1000; i++) {
+            _writer.writeFloat(Float.intBitsToFloat(r.nextInt()));
+        }
+        for (int i = 0; i < 1000; i++) {
+            _writer.writeBoolean(r.nextBoolean());
+        }
+        _writer.compress();
+
+        r = getRandom();
+        ByteArrayReader reader = new ByteArrayReader(_writer);
         reader.uncompress();
 
-        if (!reader.readUTF().equals("Hello World")) {
-            fail();
-        }
+        assertEquals("Hello World", reader.readUTF());
         for (int i = 0; i < 1000; i++) {
             assertEquals(r.nextInt(), reader.readInt());
         }

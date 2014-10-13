@@ -1,7 +1,8 @@
 package server;
 
 import client.ChatServerConnection;
-import hoten.serving.ByteArray;
+import hoten.serving.ByteArrayReader;
+import hoten.serving.ByteArrayWriter;
 import hoten.serving.SocketHandler;
 import java.io.IOException;
 import java.net.Socket;
@@ -21,19 +22,19 @@ public class ChatClientConnection extends SocketHandler {
     }
 
     @Override
-    protected void handleData(ByteArray reader) throws IOException {
-        ByteArray msg;
+    protected void handleData(ByteArrayReader reader) throws IOException {
+        ByteArrayWriter msg;
         int type = reader.getType();
         switch (type) {
             case SET_USERNAME:
                 username = reader.readUTF();
-                msg = new ByteArray();
+                msg = new ByteArrayWriter();
                 msg.setType(ChatServerConnection.PEER_JOIN);
                 msg.writeUTF(username);
                 server.sendToAllBut(msg, this);
                 break;
             case CHAT_MESSAGE:
-                msg = new ByteArray();
+                msg = new ByteArrayWriter();
                 msg.setType(ChatServerConnection.CHAT_MESSAGE);
                 msg.writeUTF(username);
                 msg.writeUTF(reader.readUTF());
@@ -44,7 +45,7 @@ public class ChatClientConnection extends SocketHandler {
                 break;
             case PRIVATE_MESSAGE:
                 String to = reader.readUTF();
-                msg = new ByteArray();
+                msg = new ByteArrayWriter();
                 msg.setType(ChatServerConnection.PRIVATE_CHAT_MESSAGE);
                 msg.writeUTF(username);
                 msg.writeUTF(reader.readUTF());
@@ -53,14 +54,12 @@ public class ChatClientConnection extends SocketHandler {
         }
     }
 
-    
-
     @Override
     public void close() {
         if (isOpen()) {
             server.removeClient(this);
             if (username != null) {
-                ByteArray msg = new ByteArray();
+                ByteArrayWriter msg = new ByteArrayWriter();
                 msg.setType(ChatServerConnection.PEER_DISCONNECT);
                 msg.writeUTF(username);
                 server.sendToAllBut(msg, this);

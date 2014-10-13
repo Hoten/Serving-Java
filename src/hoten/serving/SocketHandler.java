@@ -26,25 +26,27 @@ public abstract class SocketHandler {
         _onConnectionSettled = runnable;
     }
 
-    protected abstract void handleData(ByteArray reader) throws IOException;
+    protected abstract void handleData(ByteArrayReader reader) throws IOException;
 
     final public boolean isOpen() {
         return isOpen;
     }
+    
+    public void send(ByteArrayWriter writer) {
+        send(writer.getType(), writer.toByteArray());
+    }
 
-    public void send(ByteArray message) {
+    public void send(int messageType, byte[] messageData) {
         if (!isOpen) {
             return;
         }
-        byte[] b = message.getBytes();
-        int messageLength = b.length;
-        int type = message.getType();
+        int messageLength = messageData.length;
         if (messageLength > MAX_MSG_LENGTH) {
             System.out.println("Message is too big! " + messageLength);
             return;
         }
-        if (type > MAX_TYPE) {
-            System.out.println("Type is too high! " + type);
+        if (messageType > MAX_TYPE) {
+            System.out.println("Type is too high! " + messageType);
             return;
         }
         try {
@@ -52,8 +54,8 @@ public abstract class SocketHandler {
                 _out.write(messageLength >> 16);
                 _out.write(messageLength >> 8);
                 _out.write(messageLength);
-                _out.write(type);
-                _out.write(b);
+                _out.write(messageType);
+                _out.write(messageData);
             }
         } catch (IOException ex) {
             close();
@@ -107,9 +109,8 @@ public abstract class SocketHandler {
             //if it is not a heartbeat message...
             if (type != 0) {
                 //pass the data through a reader and call a function to deal with it
-                ByteArray reader = new ByteArray(bytes);
+                ByteArrayReader reader = new ByteArrayReader(bytes);
                 reader.setType(type);
-                reader.rewind();
                 handleData(reader);
             }
         } catch (IOException ex) {

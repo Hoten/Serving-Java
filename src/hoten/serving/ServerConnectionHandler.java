@@ -1,13 +1,10 @@
 package hoten.serving;
 
-import java.io.DataInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Stack;
 import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -19,7 +16,7 @@ public abstract class ServerConnectionHandler extends SocketHandler {
     public ServerConnectionHandler(Socket socket) throws IOException {
         super(socket);
         localDataFolder = new File(_in.readUTF());
-        ByteArray.server = this;
+        ByteArrayWriter.serverConnection = this;
     }
 
     public void start() {
@@ -43,7 +40,7 @@ public abstract class ServerConnectionHandler extends SocketHandler {
             Logger.getLogger(ServerConnectionHandler.class.getName()).log(Level.INFO, "Updating {0}, size = {1}", new Object[]{fileName, len});
             byte[] b = new byte[len];
             _in.readFully(b);
-            ByteArray.saveAs(new File(localDataFolder, fileName), b);
+            FileUtils.saveAs(new File(localDataFolder, fileName), b);
         }
         _out.write(0);//done updating files
     }
@@ -53,7 +50,7 @@ public abstract class ServerConnectionHandler extends SocketHandler {
             localDataFolder.mkdirs();
         }
 
-        List<File> localFiles = getAllFilesInDirectory(localDataFolder);
+        List<File> localFiles = FileUtils.getAllFilesInDirectory(localDataFolder);
         List<String> fileNames = new ArrayList();
         List<String> fileHashes = new ArrayList();
         readFileHashesFromServer(fileNames, fileHashes);
@@ -67,23 +64,6 @@ public abstract class ServerConnectionHandler extends SocketHandler {
         localFiles.stream().forEach((f) -> {
             f.delete();
         });
-    }
-
-    //todo: refactor
-    private List<File> getAllFilesInDirectory(File dir) {
-        List<File> result = new ArrayList();
-        Stack<File> all = new Stack();
-        all.addAll(Arrays.asList(dir.listFiles()));
-        while (!all.isEmpty()) {
-            File cur = all.pop();
-            if (cur.isDirectory()) {
-                all.addAll(Arrays.asList(cur.listFiles()));
-                result.add(cur);
-            } else {
-                result.add(cur);
-            }
-        }
-        return result;
     }
 
     private void readFileHashesFromServer(List<String> fileNames, List<String> fileHashes) throws IOException {
@@ -110,7 +90,7 @@ public abstract class ServerConnectionHandler extends SocketHandler {
                 }
             }
 
-            if (!f.exists() || !ByteArray.readFromFile(f).getMD5Hash().equals(fileHash)) {
+            if (!f.exists() || !new ByteArrayReader(f).getMD5Hash().equals(fileHash)) {
                 filesToRequest.add(fileName);
             }
         }

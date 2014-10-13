@@ -1,6 +1,7 @@
 package client;
 
-import hoten.serving.ByteArray;
+import hoten.serving.ByteArrayReader;
+import hoten.serving.ByteArrayWriter;
 import java.io.File;
 import java.io.IOException;
 import java.net.Socket;
@@ -24,7 +25,7 @@ public class ClientDriver {
         String username = promptUsername(s);
         readWelcomeMesssage();
 
-        ByteArray msg = new ByteArray();
+        ByteArrayWriter msg = new ByteArrayWriter();
         msg.setType(ChatClientConnection.SET_USERNAME);
         msg.writeUTF(username);
         msg.send();
@@ -43,7 +44,7 @@ public class ClientDriver {
     }
 
     private static boolean processChatInput(String input) {
-        ByteArray msg;
+        ByteArrayWriter msg;
         if (input.startsWith("/")) {
             String[] split = input.split(" ", 2);
             if (split.length != 2) {
@@ -51,18 +52,18 @@ public class ClientDriver {
             }
             String to = split[0].substring(1);
             String whisper = split[1];
-            msg = new ByteArray();
+            msg = new ByteArrayWriter();
             msg.setType(ChatClientConnection.PRIVATE_MESSAGE);
             msg.writeUTF(to);
             msg.writeUTF(whisper);
             msg.send();
         } else if (input.equalsIgnoreCase("quit")) {
-            msg = new ByteArray();
+            msg = new ByteArrayWriter();
             msg.setType(ChatClientConnection.LOGOFF);
             msg.send();
             return false;
         } else {
-            msg = new ByteArray();
+            msg = new ByteArrayWriter();
             msg.setType(ChatClientConnection.CHAT_MESSAGE);
             msg.writeUTF(input);
             msg.send();
@@ -72,7 +73,7 @@ public class ClientDriver {
 
     private static void readWelcomeMesssage() {
         File f = new File(serverConnection.localDataFolder, "welcome.txt");
-        ByteArray ba = ByteArray.readFromFileAndRewind(f);
-        System.out.println("\n" + ba.readUTFBytes(ba.getBytesAvailable()) + "\n");
+        ByteArrayReader ba = new ByteArrayReader(f);
+        System.out.println("\n" + ba.readUTFBytes((int) f.length()) + "\n");
     }
 }

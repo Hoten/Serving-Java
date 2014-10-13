@@ -1,6 +1,6 @@
 package client;
 
-import hoten.serving.ByteArray;
+import hoten.serving.ByteArrayReader;
 import hoten.serving.ServerConnectionHandler;
 import java.io.IOException;
 import java.net.Socket;
@@ -18,7 +18,7 @@ public class ChatServerConnection extends ServerConnectionHandler {
     }
 
     @Override
-    protected void handleData(ByteArray reader) throws IOException {
+    protected void handleData(ByteArrayReader reader) throws IOException {
         int type = reader.getType();
         switch (type) {
             case PEER_JOIN:

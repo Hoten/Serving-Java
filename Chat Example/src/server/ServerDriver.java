@@ -1,6 +1,7 @@
 package server;
 
-import hoten.serving.ByteArray;
+import hoten.serving.ByteArrayWriter;
+import hoten.serving.FileUtils;
 import java.io.File;
 import java.io.IOException;
 import java.util.Date;
@@ -18,9 +19,9 @@ public class ServerDriver {
     }
 
     private static void createRandomWelcomeMessage(String clientDataDirName) {
-        ByteArray welcomeMessage = new ByteArray();
+        ByteArrayWriter welcomeMessage = new ByteArrayWriter();
         welcomeMessage.writeUTFBytes("Hello! Welcome to the chat. Here is a random number: " + Math.random());
         welcomeMessage.writeUTFBytes("\nAnd this is when the server was started: " + new Date(System.currentTimeMillis()));
-        ByteArray.saveAs(new File(clientDataDirName, "welcome.txt"), welcomeMessage);
+        FileUtils.saveAs(new File(clientDataDirName, "welcome.txt"), welcomeMessage);
     }
 }

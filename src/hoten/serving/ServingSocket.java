@@ -6,9 +6,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Stack;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -35,7 +33,7 @@ public abstract class ServingSocket<T extends SocketHandler> {
         _socket = new ServerSocket(port);
         startHeartbeat(heartbeatDelay);
     }
-    
+
     public ServingSocket(int port, int heartbeatDelay) throws IOException {
         this(port, heartbeatDelay, null, null);
     }
@@ -62,22 +60,26 @@ public abstract class ServingSocket<T extends SocketHandler> {
         _open = true;
     }
 
-    public void sendToAll(ByteArray msg) {
-        _clients.stream().forEach((c) -> {
-            c.send(msg);
-        });
-    }
-    
-    public void sendToSome(ByteArray msg, Predicate<T> filter) {
-        _clients.stream().filter(filter).forEach((c) -> {
-            c.send(msg);
+    public void sendTo(ByteArrayWriter msg, Predicate<T> selector) {
+        byte[] messageData = msg.toByteArray();
+        int messageType = msg.getType();
+        _clients.stream().filter(selector).forEach((c) -> {
+            c.send(messageType, messageData);
         });
     }
 
-    public void sendToAllBut(ByteArray msg, SocketHandler client) {
-        _clients.stream().filter((c) -> (c != client)).forEach((c) -> {
-            c.send(msg);
+    public void sendToFirst(ByteArrayWriter msg, Predicate<T> selector) {
+        _clients.stream().filter(selector).findFirst().ifPresent((c) -> {
+            c.send(msg.getType(), msg.toByteArray());
         });
+    }
+
+    public void sendToAll(ByteArrayWriter msg) {
+        sendTo(msg, (c) -> true);
+    }
+
+    public void sendToAllBut(ByteArrayWriter msg, SocketHandler client) {
+        sendTo(msg, (c) -> (c != client));
     }
 
     public void removeClient(T client) {
@@ -104,7 +106,8 @@ public abstract class ServingSocket<T extends SocketHandler> {
         out.writeInt(numFilesToUpdate);
         for (int i = 0; i < numFilesToUpdate; i++) {
             String fname = in.readUTF();
-            byte[] fileBytes = ByteArray.readFromFileAsRawArray(new File(_clientDataFolder, fname));
+            ByteArrayReader bar = new ByteArrayReader(new File(_clientDataFolder, fname));
+            byte[] fileBytes = bar.toByteArray();
             out.writeUTF(fname);
             out.writeInt(fileBytes.length);
             out.write(fileBytes);
@@ -117,41 +120,22 @@ public abstract class ServingSocket<T extends SocketHandler> {
             _clientDataFolder.mkdirs();
         }
 
-        //build the hashes
-        ByteArray hashes = new ByteArray();
-        hashes.writeInt(0);//placeholder
-        Stack<File> a = new Stack();
-        a.addAll(Arrays.asList(_clientDataFolder.listFiles()));
-        int numFiles = 0;
-        while (!a.isEmpty()) {
-            File cur = a.pop();
-            if (cur.isDirectory()) {
-                a.addAll(Arrays.asList(cur.listFiles()));
-            } else {
-                String path = cur.getName();
-                File f = cur;
-                ByteArray ba = ByteArray.readFromFile(f);
+        List<File> files = FileUtils.getAllFilesInDirectory(_clientDataFolder);
+        ByteArrayWriter hashes = new ByteArrayWriter();
+        hashes.writeInt(files.size());
+        files.stream().forEach((file) -> {
+            ByteArrayReader reader = new ByteArrayReader(file);
+            String relativePath = _clientDataFolder.toPath().relativize(file.toPath()).toString();
+            String hash = reader.getMD5Hash();
+            hashes.writeUTF(relativePath);
+            hashes.writeUTF(hash);
+        });
 
-                //build the relative path to the clientDataFolder
-                //TODO use stringbuilder. find a way to do it when adding to begining
-                while ((f = f.getParentFile()) != null && !f.equals(_clientDataFolder)) {
-                    path = f.getName() + File.separator + path;
-                }
-
-                hashes.writeUTF(path);
-                hashes.writeUTF(ba.getMD5Hash());
-                numFiles++;
-            }
-        }
-        int eof = hashes.getPos();
-        hashes.setPos(0);
-        hashes.writeInt(numFiles);
-        hashes.setPos(eof);
-        return hashes.getBytes();
+        return hashes.toByteArray();
     }
 
     private void startHeartbeat(int heartbeatDelay) {
-        final ByteArray msg = new ByteArray();
+        final ByteArrayWriter msg = new ByteArrayWriter();
         msg.setType(0);
         final Runnable heartbeat = () -> {
             sendToAll(msg);
