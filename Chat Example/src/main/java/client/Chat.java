@@ -1,0 +1,105 @@
+package client;
+
+import hoten.serving.FileUtils;
+import hoten.serving.JsonMessageBuilder;
+import hoten.serving.Message;
+import java.io.File;
+import java.io.UnsupportedEncodingException;
+import java.util.Scanner;
+import java.util.concurrent.Executors;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+public class Chat {
+
+    private ConnectionToChatServerHandler _serverConnection;
+
+    public void startChat(ConnectionToChatServerHandler serverConnection) {
+        _serverConnection = serverConnection;
+        final Scanner s = new Scanner(System.in);
+        String username = promptUsername(s);
+        readWelcomeMesssage();
+
+        Message message = new JsonMessageBuilder()
+                .protocol(_serverConnection.clientProtocols.setUsername)
+                .set("username", username)
+                .build();
+        _serverConnection.send(message);
+
+        Executors.newSingleThreadExecutor().execute(() -> {
+            while (processChatInput(s.nextLine()));
+            _serverConnection.close();
+        });
+    }
+
+    public void announceNewUser(String username) {
+        display(String.format("%s has connected to the chat. Say hello!", username));
+    }
+
+    public void global(String from, String msg) {
+        display(String.format("%s: %s", from, msg));
+    }
+
+    public void whisper(String from, String msg) {
+        display(String.format("%s whispers to you: %s", from, msg));
+    }
+
+    public void announceDisconnect(String username) {
+        display(String.format("%s has left the chat.", username));
+    }
+
+    public void announce(String msg) {
+        display(msg);
+    }
+
+    private String promptUsername(Scanner s) {
+        System.out.print("Enter your username (no spaces): ");
+        String username = s.next();
+        s.nextLine();
+        return username;
+    }
+
+    private boolean processChatInput(String input) {
+        Message message;
+        boolean continueChat = true;
+        if (input.startsWith("/")) {
+            String[] split = input.split(" ", 2);
+            if (split.length != 2) {
+                return true;
+            }
+            String to = split[0].substring(1);
+            String whisper = split[1];
+            message = new JsonMessageBuilder()
+                    .protocol(_serverConnection.clientProtocols.privateMessage)
+                    .set("to", to)
+                    .set("msg", whisper)
+                    .build();
+        } else if (input.equalsIgnoreCase("quit")) {
+            message = new JsonMessageBuilder()
+                    .protocol(_serverConnection.clientProtocols.logOff)
+                    .build();
+            continueChat = false;
+        } else {
+            message = new JsonMessageBuilder()
+                    .protocol(_serverConnection.clientProtocols.chatMessage)
+                    .set("msg", input)
+                    .build();
+        }
+        _serverConnection.send(message);
+        return continueChat;
+    }
+
+    private void readWelcomeMesssage() {
+        try {
+            File f = new File(_serverConnection.localDataFolder, "welcome.txt");
+            String welcome = new String(FileUtils.getFileBytes(f), "UTF-8");
+            System.out.println("\n" + welcome + "\n");
+        } catch (UnsupportedEncodingException ex) {
+            Logger.getLogger(Chat.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    private void display(String msg) {
+        System.out.println(msg);
+    }
+}

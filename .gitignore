@@ -216,3 +216,9 @@ pip-log.txt
 /Chat Example/nbproject/private/
 /Chat Example/clientdata/
 /Chat Example/localdata/
+
+#############
+## Maven
+#############
+
+target/
