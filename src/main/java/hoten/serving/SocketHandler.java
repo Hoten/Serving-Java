@@ -1,8 +1,6 @@
 package hoten.serving;
 
-import com.google.gson.Gson;
 import hoten.serving.Protocols.Protocol;
-import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -42,7 +40,7 @@ public abstract class SocketHandler {
         try {
             synchronized (_out) {
                 _out.writeInt(message.data.length);
-                _out.writeInt(message.type);
+                _out.writeInt(message.protocol.type);
                 _out.write(message.data);
             }
         } catch (IOException ex) {
@@ -67,20 +65,14 @@ public abstract class SocketHandler {
     private void handleData() throws IOException {
         int buffer = _in.readInt();
         int type = _in.readInt();
-        Protocol protocol = _protocols.get(_boundFrom, type);
         byte[] bytes = new byte[buffer];
         _in.readFully(bytes);
-        if (protocol.compress) {
-            bytes = new Decompressor().uncompress(bytes);
-        }
-        if (protocol.method == Protocols.DataMethod.JSON) {
-            String json = new String(bytes, "UTF-8");
-            Gson gson = new Gson();
-            Map data = gson.fromJson(json, Map.class);
-            handleData(type, data);
-        } else if (protocol.method == Protocols.DataMethod.BINARY) {
-            DataInputStream data = new DataInputStream(new ByteArrayInputStream(bytes));
-            handleData(type, data);
+        Message message = Message.InboundMessage(_protocols.get(_boundFrom, type), bytes);
+        Object interpreted = message.interpret();
+        if (interpreted instanceof Map) {
+            handleData(type, (Map) interpreted);
+        } else if (interpreted instanceof DataInputStream) {
+            handleData(type, (DataInputStream) interpreted);
         }
     }
 

@@ -11,14 +11,15 @@ import java.util.logging.Logger;
 public class Chat {
 
     private ConnectionToChatServerHandler _serverConnection;
+    private String _username;
 
     public void startChat(ConnectionToChatServerHandler serverConnection) {
         _serverConnection = serverConnection;
         final Scanner s = new Scanner(System.in);
-        String username = promptUsername(s);
+        _username = promptUsername(s);
         readWelcomeMesssage();
 
-        _serverConnection.sendUsername(username);
+        _serverConnection.sendUsername(_username);
 
         Executors.newSingleThreadExecutor().execute(() -> {
             while (processChatInput(s.nextLine()));
@@ -76,7 +77,8 @@ public class Chat {
         try {
             File f = new File(_serverConnection.localDataFolder, "welcome.txt");
             String welcome = new String(FileUtils.getFileBytes(f), "UTF-8");
-            System.out.println("\n" + welcome + "\n");
+            String formatted = String.format(welcome, _username);
+            System.out.println("\n" + formatted + "\n");
         } catch (UnsupportedEncodingException ex) {
             Logger.getLogger(Chat.class.getName()).log(Level.SEVERE, null, ex);
         }

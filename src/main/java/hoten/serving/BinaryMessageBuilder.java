@@ -10,12 +10,12 @@ class BinaryMessageBuilder {
 
     private final ByteArrayOutputStream _out;
     private Protocol _protocol;
-    
+
     public BinaryMessageBuilder() {
         _out = new ByteArrayOutputStream();
     }
-    
-    public BinaryMessageBuilder protocol(Protocol protocol) { 
+
+    public BinaryMessageBuilder protocol(Protocol protocol) {
         _protocol = protocol;
         return this;
     }
@@ -63,7 +63,7 @@ class BinaryMessageBuilder {
         _out.write(v ? 1 : 0);
         return this;
     }
-    
+
     public BinaryMessageBuilder writeBytes(byte[] bytes) {
         _out.write(bytes, 0, bytes.length);
         return this;
@@ -74,12 +74,12 @@ class BinaryMessageBuilder {
         writeShort(bytes.length);
         return writeBytes(bytes);
     }
-    
+
     public BinaryMessageBuilder writeFile(File file) throws IOException {
         return writeBytes(Files.readAllBytes(file.toPath()));
     }
 
     public Message build() {
-        return new Message(_protocol, _out.toByteArray());
+        return Message.OutboundMessage(_protocol, _out.toByteArray());
     }
 }

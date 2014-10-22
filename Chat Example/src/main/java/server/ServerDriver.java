@@ -20,7 +20,7 @@ public class ServerDriver {
     private static void createRandomWelcomeMessage(String clientDataDirName) {
         Date today = new Date(System.currentTimeMillis());
         double random = Math.random();
-        String msg = String.format("Hello! Welcome to the chat. Here is a random number: %f"
+        String msg = String.format("Hello %%s! Welcome to the chat. Here is a random number: %f"
                 + "\nAnd this is when the server was started: %s", random, today);
         FileUtils.saveAs(new File(clientDataDirName, "welcome.txt"), msg.getBytes());
     }
