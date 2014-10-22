@@ -16,7 +16,7 @@ public abstract class ConnectionToServerHandler extends SocketHandler {
     public final File localDataFolder;
 
     public ConnectionToServerHandler(Socket socket, Protocols protocols) throws IOException {
-        super(socket, protocols);
+        super(socket, protocols, Protocols.BoundDest.SERVER);
         localDataFolder = new File(_in.readUTF());
     }
 

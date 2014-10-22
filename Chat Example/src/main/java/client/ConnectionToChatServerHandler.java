@@ -1,22 +1,47 @@
 package client;
 
-import chat.ClientToServerProtocols;
-import chat.ServerToClientProtocols;
+import chat.ChatProtocols;
+import chat.ChatProtocols.Clientbound;
 import hoten.serving.ConnectionToServerHandler;
+import hoten.serving.JsonMessageBuilder;
+import hoten.serving.Message;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.util.Map;
+import static chat.ChatProtocols.Serverbound.*;
 
 public class ConnectionToChatServerHandler extends ConnectionToServerHandler {
 
     private final Chat _chat;
-    private final ServerToClientProtocols serverProtocols = new ServerToClientProtocols();
-    public final ClientToServerProtocols clientProtocols = new ClientToServerProtocols();
 
     public ConnectionToChatServerHandler(Chat chat, Socket socket) throws IOException {
-        super(socket, new ServerToClientProtocols());
+        super(socket, new ChatProtocols());
         _chat = chat;
+    }
+
+    public void quit() {
+        Message message = new JsonMessageBuilder()
+                .protocol(outbound(LogOff))
+                .build();
+        send(message);
+    }
+
+    public void sendMessage(String msg) {
+        Message message = new JsonMessageBuilder()
+                .protocol(outbound(ChatMessage))
+                .set("msg", msg)
+                .build();
+        send(message);
+    }
+
+    public void sendWhisper(String to, String msg) {
+        Message message = new JsonMessageBuilder()
+                .protocol(outbound(PrivateMessage))
+                .set("to", to)
+                .set("msg", msg)
+                .build();
+        send(message);
     }
 
     @Override
@@ -26,21 +51,34 @@ public class ConnectionToChatServerHandler extends ConnectionToServerHandler {
 
     @Override
     protected void handleData(int type, Map data) throws IOException {
-        //TODO very hard to read.
-        if (type == serverProtocols.peerJoin.type) {
-            _chat.announceNewUser((String) data.get("username"));
-        } else if (type == serverProtocols.chatMessage.type) {
-            _chat.global((String) data.get("from"), (String) data.get("msg"));
-        } else if (type == serverProtocols.peerDisconnect.type) {
-            _chat.announceDisconnect((String) data.get("username"));
-        } else if (type == serverProtocols.privateMessage.type) {
-            _chat.whisper((String) data.get("from"), (String) data.get("msg"));
-        } else if (type == serverProtocols.print.type) {
-            _chat.announce((String) data.get("msg"));
+        switch (Clientbound.values()[type]) {
+            case PeerJoin:
+                _chat.announceNewUser((String) data.get("username"));
+                break;
+            case ChatMessage:
+                _chat.global((String) data.get("from"), (String) data.get("msg"));
+                break;
+            case PeerDisconnect:
+                _chat.announceDisconnect((String) data.get("username"));
+                break;
+            case PrivateMessage:
+                _chat.whisper((String) data.get("from"), (String) data.get("msg"));
+                break;
+            case Print:
+                _chat.announce((String) data.get("msg"));
+                break;
         }
     }
 
     @Override
     protected void handleData(int type, DataInputStream data) {
+    }
+
+    void sendUsername(String username) {
+        Message message = new JsonMessageBuilder()
+                .protocol(outbound(SetUsername))
+                .set("username", username)
+                .build();
+        send(message);
     }
 }

@@ -1,8 +1,6 @@
 package client;
 
 import hoten.serving.FileUtils;
-import hoten.serving.JsonMessageBuilder;
-import hoten.serving.Message;
 import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.util.Scanner;
@@ -20,11 +18,7 @@ public class Chat {
         String username = promptUsername(s);
         readWelcomeMesssage();
 
-        Message message = new JsonMessageBuilder()
-                .protocol(_serverConnection.clientProtocols.setUsername)
-                .set("username", username)
-                .build();
-        _serverConnection.send(message);
+        _serverConnection.sendUsername(username);
 
         Executors.newSingleThreadExecutor().execute(() -> {
             while (processChatInput(s.nextLine()));
@@ -60,7 +54,6 @@ public class Chat {
     }
 
     private boolean processChatInput(String input) {
-        Message message;
         boolean continueChat = true;
         if (input.startsWith("/")) {
             String[] split = input.split(" ", 2);
@@ -68,24 +61,14 @@ public class Chat {
                 return true;
             }
             String to = split[0].substring(1);
-            String whisper = split[1];
-            message = new JsonMessageBuilder()
-                    .protocol(_serverConnection.clientProtocols.privateMessage)
-                    .set("to", to)
-                    .set("msg", whisper)
-                    .build();
+            String msg = split[1];
+            _serverConnection.sendWhisper(to, msg);
         } else if (input.equalsIgnoreCase("quit")) {
-            message = new JsonMessageBuilder()
-                    .protocol(_serverConnection.clientProtocols.logOff)
-                    .build();
+            _serverConnection.quit();
             continueChat = false;
         } else {
-            message = new JsonMessageBuilder()
-                    .protocol(_serverConnection.clientProtocols.chatMessage)
-                    .set("msg", input)
-                    .build();
+            _serverConnection.sendMessage(input);
         }
-        _serverConnection.send(message);
         return continueChat;
     }
 

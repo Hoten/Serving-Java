@@ -7,7 +7,7 @@ import java.io.IOException;
 import java.net.Socket;
 import java.util.stream.Collectors;
 
-public class ServingChat extends ServingSocket<ConnectionToChatServerHandler> {
+public class ServingChat extends ServingSocket<ConnectionToChatClientHandler> {
 
     public ServingChat(int port, String clientDataDirName, String localDataDirName) throws IOException {
         super(port, new File(clientDataDirName), localDataDirName);
@@ -27,8 +27,8 @@ public class ServingChat extends ServingSocket<ConnectionToChatServerHandler> {
     }
 
     @Override
-    protected ConnectionToChatServerHandler makeNewConnection(Socket newConnection) throws IOException {
-        ConnectionToChatServerHandler clientConnection = new ConnectionToChatServerHandler(this, newConnection);
+    protected ConnectionToChatClientHandler makeNewConnection(Socket newConnection) throws IOException {
+        ConnectionToChatClientHandler clientConnection = new ConnectionToChatClientHandler(this, newConnection);
         return clientConnection;
     }
 }

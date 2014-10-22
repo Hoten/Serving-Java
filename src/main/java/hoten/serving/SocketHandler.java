@@ -15,11 +15,15 @@ public abstract class SocketHandler {
     final DataInputStream _in;
     final DataOutputStream _out;
     final Protocols _protocols;
+    final Protocols.BoundDest _boundFrom;
+    final Protocols.BoundDest _boundTo;
     boolean isOpen;
 
-    public SocketHandler(Socket socket, Protocols protocols) throws IOException {
+    public SocketHandler(Socket socket, Protocols protocols, Protocols.BoundDest boundTo) throws IOException {
         _socket = socket;
         _protocols = protocols;
+        _boundTo = boundTo;
+        _boundFrom = boundTo == Protocols.BoundDest.CLIENT ? Protocols.BoundDest.SERVER : Protocols.BoundDest.CLIENT;
         _in = new DataInputStream(socket.getInputStream());
         _out = new DataOutputStream(socket.getOutputStream());
         isOpen = true;
@@ -63,7 +67,7 @@ public abstract class SocketHandler {
     private void handleData() throws IOException {
         int buffer = _in.readInt();
         int type = _in.readInt();
-        Protocol protocol = _protocols.get(type);
+        Protocol protocol = _protocols.get(_boundFrom, type);
         byte[] bytes = new byte[buffer];
         _in.readFully(bytes);
         if (protocol.compress) {
@@ -88,6 +92,10 @@ public abstract class SocketHandler {
         } catch (IOException ex) {
             close();
         }
+    }
+
+    protected Protocol outbound(Enum protocolEnum) {
+        return _protocols.get(_boundTo, protocolEnum.ordinal());
     }
 
     final public boolean isOpen() {
