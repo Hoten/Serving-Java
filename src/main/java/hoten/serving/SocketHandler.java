@@ -1,11 +1,11 @@
 package hoten.serving;
 
+import com.google.gson.JsonObject;
 import hoten.serving.Protocols.Protocol;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
-import java.util.Map;
 
 public abstract class SocketHandler {
 
@@ -29,7 +29,7 @@ public abstract class SocketHandler {
 
     protected abstract void onConnectionSettled();
 
-    protected abstract void handleData(int type, Map data) throws IOException;
+    protected abstract void handleData(int type, JsonObject data) throws IOException;
 
     protected abstract void handleData(int type, DataInputStream data) throws IOException;
 
@@ -69,8 +69,8 @@ public abstract class SocketHandler {
         _in.readFully(bytes);
         Message message = Message.InboundMessage(_protocols.get(_boundFrom, type), bytes);
         Object interpreted = message.interpret();
-        if (interpreted instanceof Map) {
-            handleData(type, (Map) interpreted);
+        if (interpreted instanceof JsonObject) {
+            handleData(type, (JsonObject) interpreted);
         } else if (interpreted instanceof DataInputStream) {
             handleData(type, (DataInputStream) interpreted);
         }

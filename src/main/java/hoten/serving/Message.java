@@ -1,11 +1,12 @@
 package hoten.serving;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import hoten.serving.Protocols.Protocol;
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.UnsupportedEncodingException;
-import java.util.Map;
 
 public final class Message {
 
@@ -37,10 +38,10 @@ public final class Message {
         return data;
     }
 
-    Map interpretAsJson() throws UnsupportedEncodingException {
+    JsonObject interpretAsJson() throws UnsupportedEncodingException {
         String json = new String(data, "UTF-8");
         Gson gson = new Gson();
-        return gson.fromJson(json, Map.class);
+        return gson.fromJson(json, JsonElement.class).getAsJsonObject();
     }
 
     DataInputStream interpretAsBinary() {

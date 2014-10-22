@@ -69,9 +69,9 @@ public abstract class ConnectionToServerHandler extends SocketHandler {
         hashes.forEach((fileName, fileHash) -> {
             File f = new File(localDataFolder, fileName);
 
-            //remove this file as a candidate for pruning
             for (File cf : files) {
                 if (cf.equals(f)) {
+                    //remove this file as a candidate for pruning
                     files.remove(cf);
                     break;
                 }

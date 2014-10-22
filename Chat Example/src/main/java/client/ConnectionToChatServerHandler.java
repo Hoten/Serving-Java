@@ -8,8 +8,8 @@ import hoten.serving.Message;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.net.Socket;
-import java.util.Map;
 import static chat.ChatProtocols.Serverbound.*;
+import com.google.gson.JsonObject;
 
 public class ConnectionToChatServerHandler extends ConnectionToServerHandler {
 
@@ -50,22 +50,22 @@ public class ConnectionToChatServerHandler extends ConnectionToServerHandler {
     }
 
     @Override
-    protected void handleData(int type, Map data) throws IOException {
+    protected void handleData(int type, JsonObject data) throws IOException {
         switch (Clientbound.values()[type]) {
             case PeerJoin:
-                _chat.announceNewUser((String) data.get("username"));
+                _chat.announceNewUser(data.get("username").getAsString());
                 break;
             case ChatMessage:
-                _chat.global((String) data.get("from"), (String) data.get("msg"));
+                _chat.global(data.get("from").getAsString(), data.get("msg").getAsString());
                 break;
             case PeerDisconnect:
-                _chat.announceDisconnect((String) data.get("username"));
+                _chat.announceDisconnect(data.get("username").getAsString());
                 break;
             case PrivateMessage:
-                _chat.whisper((String) data.get("from"), (String) data.get("msg"));
+                _chat.whisper(data.get("from").getAsString(), data.get("msg").getAsString());
                 break;
             case Print:
-                _chat.announce((String) data.get("msg"));
+                _chat.announce(data.get("msg").getAsString());
                 break;
         }
     }

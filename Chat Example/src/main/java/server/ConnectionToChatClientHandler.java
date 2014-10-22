@@ -9,8 +9,8 @@ import hoten.serving.SocketHandler;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.net.Socket;
-import java.util.Map;
 import static chat.ChatProtocols.Clientbound.*;
+import com.google.gson.JsonObject;
 
 public class ConnectionToChatClientHandler extends SocketHandler {
 
@@ -32,11 +32,11 @@ public class ConnectionToChatClientHandler extends SocketHandler {
     }
 
     @Override
-    protected void handleData(int type, Map data) throws IOException {
+    protected void handleData(int type, JsonObject data) throws IOException {
         Message message;
         switch (Serverbound.values()[type]) {
             case SetUsername:
-                username = (String) data.get("username");
+                username = data.get("username").getAsString();
                 message = new JsonMessageBuilder()
                         .protocol(outbound(PeerJoin))
                         .set("username", username)
@@ -47,7 +47,7 @@ public class ConnectionToChatClientHandler extends SocketHandler {
                 message = new JsonMessageBuilder()
                         .protocol(outbound(ChatMessage))
                         .set("from", username)
-                        .set("msg", data.get("msg"))
+                        .set("msg", data.get("msg").getAsString())
                         .build();
                 server.sendToAllBut(message, this);
                 break;
@@ -58,9 +58,9 @@ public class ConnectionToChatClientHandler extends SocketHandler {
                 message = new JsonMessageBuilder()
                         .protocol(outbound(PrivateMessage))
                         .set("from", username)
-                        .set("msg", data.get("msg"))
+                        .set("msg", data.get("msg").getAsString())
                         .build();
-                server.sendToClientWithUsername(message, (String) data.get("to"));
+                server.sendToClientWithUsername(message, data.get("to").getAsString());
                 break;
         }
     }
