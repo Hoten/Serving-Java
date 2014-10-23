@@ -80,6 +80,6 @@ class BinaryMessageBuilder {
     }
 
     public Message build() {
-        return Message.OutboundMessage(_protocol, _out.toByteArray());
+        return Message.outboundMessage(_protocol, _out.toByteArray());
     }
 }

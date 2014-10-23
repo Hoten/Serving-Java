@@ -10,11 +10,11 @@ import java.io.UnsupportedEncodingException;
 
 public final class Message {
 
-    public static Message OutboundMessage(Protocol protocol, byte[] data) {
+    public static Message outboundMessage(Protocol protocol, byte[] data) {
         return new Message(protocol, protocol.compress ? new Compressor().compress(data) : data);
     }
 
-    public static Message InboundMessage(Protocol protocol, byte[] data) {
+    public static Message inboundMessage(Protocol protocol, byte[] data) {
         return new Message(protocol, protocol.compress ? new Decompressor().uncompress(data) : data);
     }
 

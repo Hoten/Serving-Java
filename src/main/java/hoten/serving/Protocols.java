@@ -5,14 +5,14 @@ import java.util.List;
 
 public class Protocols {
 
-    public static enum DataMethod {
-
-        JSON, BINARY
-    }
-
     public static enum BoundDest {
 
         SERVER, CLIENT
+    }
+
+    public static enum DataMethod {
+
+        JSON, BINARY
     }
 
     public class Protocol {

@@ -2,6 +2,7 @@ package client;
 
 import hoten.serving.FileUtils;
 import java.io.File;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.Scanner;
 import java.util.concurrent.Executors;
@@ -13,17 +14,20 @@ public class Chat {
     private ConnectionToChatServerHandler _serverConnection;
     private String _username;
 
-    public void startChat(ConnectionToChatServerHandler serverConnection) {
+    @SuppressWarnings("empty-statement")
+    public void startChat(ConnectionToChatServerHandler serverConnection) throws IOException {
         _serverConnection = serverConnection;
         final Scanner s = new Scanner(System.in);
         _username = promptUsername(s);
-        readWelcomeMesssage();
-
         _serverConnection.sendUsername(_username);
-
+        readWelcomeMesssage();
         Executors.newSingleThreadExecutor().execute(() -> {
-            while (processChatInput(s.nextLine()));
-            _serverConnection.close();
+            try {
+                while (processChatInput(s.nextLine()));
+            } catch (IOException ex) {
+                Logger.getLogger(Chat.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            _serverConnection.closeIfOpen();
         });
     }
 
@@ -54,7 +58,7 @@ public class Chat {
         return username;
     }
 
-    private boolean processChatInput(String input) {
+    private boolean processChatInput(String input) throws IOException {
         boolean continueChat = true;
         if (input.startsWith("/")) {
             String[] split = input.split(" ", 2);

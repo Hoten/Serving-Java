@@ -1,6 +1,5 @@
 ﻿using Newtonsoft.Json;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -8,11 +7,11 @@ using System.Net;
 using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Text;
-using System.Threading.Tasks;
+using System.Threading;
 
 namespace Serving
 {
-    class BigEndianBinaryReader : BinaryReader
+    public class BigEndianBinaryReader : BinaryReader
     {
         public BigEndianBinaryReader(Stream input, Encoding encoding)
             : base(input, encoding) { }
@@ -31,11 +30,11 @@ namespace Serving
         {
             short len = ReadInt16();
             byte[] chars = ReadBytes(len);
-            return Encoding.UTF8.GetString(chars, 0, len);
+            return Encoding.UTF8.GetString(chars);
         }
     }
 
-    class BigEndianBinaryWriter : BinaryWriter
+    public class BigEndianBinaryWriter : BinaryWriter
     {
         public BigEndianBinaryWriter(Stream output, Encoding encoding)
             : base(output, encoding) { }
@@ -57,24 +56,79 @@ namespace Serving
         }
     }
 
-    class ConnectionToServerHandler
+    public abstract class ConnectionToServerHandler
     {
-        private Socket _socket;
-        private BigEndianBinaryReader _in;
-        private BigEndianBinaryWriter _out;
-        private String _localDataFolder;
+        public String LocalDataFolder { get; private set; }
 
-        public ConnectionToServerHandler(String host, int port)
+        private Thread _dataHandleThread;
+        private Socket _socket;
+        private BinaryReader _in;
+        private BinaryWriter _out;
+        private Protocols _protocols;
+        private BoundDest _boundTo;
+        private BoundDest _boundFrom;
+
+        public ConnectionToServerHandler(String host, int port, Protocols protocols, BoundDest boundTo)
         {
             Connect(host, port);
-            _localDataFolder = _in.ReadString();
-            if (!Directory.Exists(_localDataFolder))
+            _protocols = protocols;
+            _boundTo = boundTo;
+            _boundFrom = boundTo == BoundDest.CLIENT ? BoundDest.SERVER : BoundDest.CLIENT;
+            LocalDataFolder = _in.ReadString(); // :(
+            Directory.CreateDirectory(LocalDataFolder);
+        }
+
+        public void Start()
+        {
+            _dataHandleThread = new Thread(() =>
             {
-                Directory.CreateDirectory(_localDataFolder);
+                Thread.CurrentThread.IsBackground = true;
+                RespondToHashes();
+                ReadNewFilesFromServer();
+                OnConnectionSettled();
+                while (true)
+                {
+                    HandleData();
+                }
+            });
+            _dataHandleThread.Start();
+        }
+
+        protected abstract void OnConnectionSettled();
+
+        protected abstract void HandleData(int type, Dictionary<String, String> data);
+
+        protected abstract void HandleData(int type, BinaryReader data);
+
+        public void Send(Message message)
+        {
+            try
+            {
+                lock (_out)
+                {
+                    _out.Write(message.Data.Length);
+                    _out.Write(message.Protocol.Type);
+                    _out.Write(message.Data);
+                }
             }
-            RespondToHashes();
-            while (true)
+            catch (IOException ex)
             {
+                Close();
+            }
+        }
+
+        public void Close()
+        {
+            _dataHandleThread.Abort();
+            try
+            {
+                _out.Close();
+                _in.Close();
+                _socket.Close();
+            }
+            catch (IOException ex)
+            {
+                Console.WriteLine("Error closing streams " + ex);
             }
         }
 
@@ -87,13 +141,13 @@ namespace Serving
             _out = new BigEndianBinaryWriter(stream, Encoding.UTF8);
         }
 
-        private void RespondToHashes() {
+        private void RespondToHashes()
+        {
             var hashes = ReadFileHashesFromServer();
-            var localFiles = new List<String>(Directory.GetFiles(_localDataFolder));
+            var localFiles = new List<String>(Directory.GetFiles(LocalDataFolder));
             var filesToRequest = CompareFileHashes(localFiles, hashes);
             var json = JsonConvert.SerializeObject(filesToRequest);
             _out.Write(json);
-            ReadNewFilesFromServer();
         }
 
         private Dictionary<String, sbyte[]> ReadFileHashesFromServer()
@@ -111,7 +165,7 @@ namespace Serving
             {
                 var fileName = entry.Key;
                 var fileHash = entry.Value;
-                var path = System.IO.Path.Combine(_localDataFolder, fileName);
+                var path = System.IO.Path.Combine(LocalDataFolder, fileName);
 
                 files.Remove(fileName);
                 if (!File.Exists(path))
@@ -141,16 +195,33 @@ namespace Serving
                 var fileName = _in.ReadString();
                 int length = _in.ReadInt32();
                 var data = _in.ReadBytes(length);
-                var path = System.IO.Path.Combine(_localDataFolder, fileName);
+                var path = System.IO.Path.Combine(LocalDataFolder, fileName);
                 Directory.CreateDirectory(Path.GetDirectoryName(path));
                 File.WriteAllBytes(path, data);
             }
-            _out.Write(0);//done updating files
+            _out.Write((byte)0); //done updating files
         }
 
         private void HandleData()
         {
             int dataSize = _in.ReadInt32();
+            int type = _in.ReadInt32();
+            byte[] bytes = _in.ReadBytes(dataSize);
+            Message message = Message.InboundMessage(_protocols.Get(_boundFrom, type), bytes);
+            Object interpreted = message.Interpret();
+            if (interpreted is Dictionary<String, String>)
+            {
+                HandleData(type, interpreted as Dictionary<String, String>);
+            }
+            else if (interpreted is BinaryReader)
+            {
+                HandleData(type, interpreted as BinaryReader);
+            }
+        }
+
+        protected Protocol Outbound(Enum protocolEnum)
+        {
+            return _protocols.Get(_boundTo, Convert.ToInt32(protocolEnum));
         }
     }
 }

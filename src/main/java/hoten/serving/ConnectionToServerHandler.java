@@ -20,7 +20,8 @@ public abstract class ConnectionToServerHandler extends SocketHandler {
 
     public ConnectionToServerHandler(Socket socket, Protocols protocols) throws IOException {
         super(socket, protocols, Protocols.BoundDest.SERVER);
-        localDataFolder = new File(_in.readUTF());
+        localDataFolder = new File(_in.readUTF()); // :(
+        localDataFolder.mkdirs();
     }
 
     public void start() {
@@ -37,9 +38,6 @@ public abstract class ConnectionToServerHandler extends SocketHandler {
     }
 
     private void respondToHashes() throws IOException {
-        if (!localDataFolder.exists()) {
-            localDataFolder.mkdirs();
-        }
         Map<String, byte[]> hashes = readFileHashesFromServer();
         List<File> localFiles = FileUtils.getAllFilesInDirectory(localDataFolder);
         List<String> filesToRequest = compareFileHashes(localFiles, hashes);

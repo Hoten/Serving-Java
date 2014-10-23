@@ -20,32 +20,8 @@ public class ConnectionToChatServerHandler extends ConnectionToServerHandler {
         _chat = chat;
     }
 
-    public void quit() {
-        Message message = new JsonMessageBuilder()
-                .protocol(outbound(LogOff))
-                .build();
-        send(message);
-    }
-
-    public void sendMessage(String msg) {
-        Message message = new JsonMessageBuilder()
-                .protocol(outbound(ChatMessage))
-                .set("msg", msg)
-                .build();
-        send(message);
-    }
-
-    public void sendWhisper(String to, String msg) {
-        Message message = new JsonMessageBuilder()
-                .protocol(outbound(PrivateMessage))
-                .set("to", to)
-                .set("msg", msg)
-                .build();
-        send(message);
-    }
-
     @Override
-    protected void onConnectionSettled() {
+    protected void onConnectionSettled() throws IOException {
         _chat.startChat(this);
     }
 
@@ -74,10 +50,34 @@ public class ConnectionToChatServerHandler extends ConnectionToServerHandler {
     protected void handleData(int type, DataInputStream data) {
     }
 
-    void sendUsername(String username) {
+    public void sendUsername(String username) throws IOException {
         Message message = new JsonMessageBuilder()
                 .protocol(outbound(SetUsername))
                 .set("username", username)
+                .build();
+        send(message);
+    }
+
+    public void quit() throws IOException {
+        Message message = new JsonMessageBuilder()
+                .protocol(outbound(LogOff))
+                .build();
+        send(message);
+    }
+
+    public void sendMessage(String msg) throws IOException {
+        Message message = new JsonMessageBuilder()
+                .protocol(outbound(ChatMessage))
+                .set("msg", msg)
+                .build();
+        send(message);
+    }
+
+    public void sendWhisper(String to, String msg) throws IOException {
+        Message message = new JsonMessageBuilder()
+                .protocol(outbound(PrivateMessage))
+                .set("to", to)
+                .set("msg", msg)
                 .build();
         send(message);
     }

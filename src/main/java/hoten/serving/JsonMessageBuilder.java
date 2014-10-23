@@ -29,6 +29,6 @@ public class JsonMessageBuilder {
         } catch (UnsupportedEncodingException ex) {
             Logger.getLogger(JsonMessageBuilder.class.getName()).log(Level.SEVERE, null, ex);
         }
-        return Message.OutboundMessage(_protocol, data);
+        return Message.outboundMessage(_protocol, data);
     }
 }

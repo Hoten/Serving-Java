@@ -23,7 +23,7 @@ public class ConnectionToChatClientHandler extends SocketHandler {
     }
 
     @Override
-    protected void onConnectionSettled() {
+    protected void onConnectionSettled() throws IOException {
         Message msg = new JsonMessageBuilder()
                 .protocol(outbound(Print))
                 .set("msg", server.whoIsOnline())
@@ -52,7 +52,7 @@ public class ConnectionToChatClientHandler extends SocketHandler {
                 server.sendToAllBut(message, this);
                 break;
             case LogOff:
-                close();
+                closeIfOpen();
                 break;
             case PrivateMessage:
                 message = new JsonMessageBuilder()
@@ -70,17 +70,14 @@ public class ConnectionToChatClientHandler extends SocketHandler {
     }
 
     @Override
-    public void close() {
-        if (isOpen()) {
-            super.close();
-            server.removeClient(this);
-            if (username != null) {
-                Message message = new JsonMessageBuilder()
-                        .protocol(outbound(PeerDisconnect))
-                        .set("username", username)
-                        .build();
-                server.sendToAllBut(message, this);
-            }
+    protected void close() {
+        super.close();
+        if (username != null) {
+            Message message = new JsonMessageBuilder()
+                    .protocol(outbound(PeerDisconnect))
+                    .set("username", username)
+                    .build();
+            server.sendToAllBut(message, this);
         }
     }
 

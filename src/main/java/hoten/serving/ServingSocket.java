@@ -58,16 +58,24 @@ public abstract class ServingSocket<T extends SocketHandler> {
             }
         });
     }
+    public void sendTo(Message message, T client) {
+        try {
+            client.send(message);
+        } catch (IOException ex) {
+            _clients.remove(client);
+            client.closeIfOpen();
+        }
+    }
 
     public void sendTo(Message message, Predicate<T> selector) {
         _clients.stream().filter(selector).forEach((c) -> {
-            c.send(message);
+            sendTo(message, c);
         });
     }
 
     public void sendToFirst(Message message, Predicate<T> selector) {
         _clients.stream().filter(selector).findFirst().ifPresent((c) -> {
-            c.send(message);
+            sendTo(message, c);
         });
     }
 
@@ -78,14 +86,10 @@ public abstract class ServingSocket<T extends SocketHandler> {
     public void sendToAllBut(Message message, SocketHandler client) {
         sendTo(message, (c) -> (c != client));
     }
-
-    public void removeClient(T client) {
-        _clients.remove(client);
-    }
-
+    
     public void close() {
         _clients.stream().forEach((c) -> {
-            c.close();
+            c.closeIfOpen();
         });
     }
 
@@ -102,7 +106,6 @@ public abstract class ServingSocket<T extends SocketHandler> {
         List<String> fileNames = new Gson().fromJson(jsonFileNames, List.class);
         out.writeInt(fileNames.size());
         for (String fname : fileNames) {
-            System.out.println("request: " + fname);
             byte[] fileBytes = Files.readAllBytes(new File(_clientDataFolder, fname).toPath());
             out.writeUTF(fname);
             out.writeInt(fileBytes.length);
