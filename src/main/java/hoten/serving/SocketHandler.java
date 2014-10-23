@@ -63,9 +63,9 @@ public abstract class SocketHandler {
     }
 
     private void handleData() throws IOException {
-        int buffer = _in.readInt();
+        int dataSize = _in.readInt();
         int type = _in.readInt();
-        byte[] bytes = new byte[buffer];
+        byte[] bytes = new byte[dataSize];
         _in.readFully(bytes);
         Message message = Message.InboundMessage(_protocols.get(_boundFrom, type), bytes);
         Object interpreted = message.interpret();

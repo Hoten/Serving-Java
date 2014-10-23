@@ -52,7 +52,7 @@ public class FileUtils {
         return null;
     }
 
-    public static String md5HashFile(File file) {
+    public static byte[] md5HashFile(File file) {
         return new MD5Hash().hash(getFileBytes(file));
     }
 }

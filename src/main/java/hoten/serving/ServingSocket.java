@@ -102,6 +102,7 @@ public abstract class ServingSocket<T extends SocketHandler> {
         List<String> fileNames = new Gson().fromJson(jsonFileNames, List.class);
         out.writeInt(fileNames.size());
         for (String fname : fileNames) {
+            System.out.println("request: " + fname);
             byte[] fileBytes = Files.readAllBytes(new File(_clientDataFolder, fname).toPath());
             out.writeUTF(fname);
             out.writeInt(fileBytes.length);
@@ -111,11 +112,11 @@ public abstract class ServingSocket<T extends SocketHandler> {
     }
 
     private String hashFiles() {
-        Map hashes = new HashMap();
+        Map<String, byte[]> hashes = new HashMap();
         List<File> files = FileUtils.getAllFilesInDirectory(_clientDataFolder);
         files.stream().forEach((file) -> {
             String relativePath = _clientDataFolder.toPath().relativize(file.toPath()).toString();
-            String hash = FileUtils.md5HashFile(file);
+            byte[] hash = FileUtils.md5HashFile(file);
             hashes.put(relativePath, hash);
         });
         return new Gson().toJson(hashes, Map.class);
