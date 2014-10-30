@@ -1,4 +1,5 @@
-﻿using Serving;
+﻿using Newtonsoft.Json.Linq;
+using Serving;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -20,24 +21,24 @@ namespace ChatClient
             _chat.StartChat(this);
         }
 
-        protected override void HandleData(int type, Dictionary<String, String> data)
+        protected override void HandleData(int type, JObject data)
         {
             switch ((ChatProtocols.Clientbound)type)
             {
                 case ChatProtocols.Clientbound.PeerJoin:
-                    _chat.AnnounceNewUser(data["username"]);
+                    _chat.AnnounceNewUser(data["username"].Value<String>());
                     break;
                 case ChatProtocols.Clientbound.ChatMessage:
-                    _chat.Global(data["from"], data["msg"]);
+                    _chat.Global(data["from"].Value<String>(), data["msg"].Value<String>());
                     break;
                 case ChatProtocols.Clientbound.PeerDisconnect:
-                    _chat.AnnounceDisconnect(data["username"]);
+                    _chat.AnnounceDisconnect(data["username"].Value<String>());
                     break;
                 case ChatProtocols.Clientbound.PrivateMessage:
-                    _chat.Whisper(data["from"], data["msg"]);
+                    _chat.Whisper(data["from"].Value<String>(), data["msg"].Value<String>());
                     break;
                 case ChatProtocols.Clientbound.Print:
-                    _chat.Announce(data["msg"]);
+                    _chat.Announce(data["msg"].Value<String>());
                     break;
             }
         }

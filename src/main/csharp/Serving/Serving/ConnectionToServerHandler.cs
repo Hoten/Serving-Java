@@ -1,6 +1,7 @@
 ﻿using MiscUtil.Conversion;
 using MiscUtil.IO;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -71,7 +72,7 @@ namespace Serving
 
         protected abstract void OnConnectionSettled();
 
-        protected abstract void HandleData(int type, Dictionary<String, String> data);
+        protected abstract void HandleData(int type, JObject data);
 
         protected abstract void HandleData(int type, JavaBinaryReader data);
 
@@ -185,9 +186,9 @@ namespace Serving
             byte[] bytes = _in.ReadBytes(dataSize);
             Message message = Message.InboundMessage(_protocols.Get(_boundFrom, type), bytes);
             Object interpreted = message.Interpret();
-            if (interpreted is Dictionary<String, String>)
+            if (interpreted is JObject)
             {
-                HandleData(type, interpreted as Dictionary<String, String>);
+                HandleData(type, interpreted as JObject);
             }
             else if (interpreted is JavaBinaryReader)
             {

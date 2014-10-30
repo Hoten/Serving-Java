@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -81,10 +82,10 @@ namespace Serving
             return null;
         }
 
-        private Dictionary<String, String> InterpretAsJson()
+        private JObject InterpretAsJson()
         {
             var json = Encoding.UTF8.GetString(Data);
-            return JsonConvert.DeserializeObject<Dictionary<String, String>>(json);
+            return JObject.Parse(json);
         }
 
         private JavaBinaryReader InterpretAsBinary()
