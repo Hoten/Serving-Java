@@ -26,18 +26,33 @@ public class ChatIT {
     private static class ProcessStreams {
 
         public ProcessStreams(Process process, BufferedReader in, BufferedWriter out) {
-            this.process = process;
-            this.in = in;
-            this.out = out;
+            _process = process;
+            _in = in;
+            _out = out;
         }
 
-        public final Process process;
-        public final BufferedReader in;
-        public final BufferedWriter out;
+        final Process _process;
+        final BufferedReader _in;
+        final BufferedWriter _out;
+
+        public void writeAndFlush(String str) throws IOException {
+            _out.write(str);
+            _out.flush();
+        }
+
+        public String readLine() throws IOException {
+            return _in.readLine();
+        }
+
+        public void end() {
+            _process.destroyForcibly();
+        }
     }
 
     static ProcessStreams server;
     static List<ProcessStreams> clients = new ArrayList();
+    static String jarPath = new File("Chat-Example/target/Chat-Example-1.0-SNAPSHOT-jar-with-dependencies.jar").getAbsolutePath();
+    static String csharpExePath = new File("Chat-Example/src/main/csharp/ChatClient/ChatClient/bin/Release/ChatClient").getAbsolutePath();
 
     private static ProcessStreams makeProcess(ProcessBuilder builder) throws IOException {
         builder.directory().mkdirs();
@@ -47,16 +62,33 @@ public class ChatIT {
         return new ProcessStreams(process, in, out);
     }
 
+    private static ProcessStreams makeServerProcess() throws IOException {
+        ProcessBuilder builder = new ProcessBuilder()
+                .directory(new File("ChatIT"))
+                .command("java", "-cp", jarPath, "server.ServerDriver")
+                .redirectErrorStream(true);
+        return makeProcess(builder);
+    }
+
+    private static ProcessStreams makeJavaClientProcess(String clientName) throws IOException {
+        ProcessBuilder builder = new ProcessBuilder()
+                .directory(new File("ChatIT/" + clientName))
+                .command("java", "-cp", jarPath, "client.ClientDriver")
+                .redirectErrorStream(true);
+        return makeProcess(builder);
+    }
+
+    private static ProcessStreams makeCsharpClientProcess(String clientName) throws IOException {
+        ProcessBuilder builder = new ProcessBuilder()
+                .directory(new File("ChatIT/" + clientName))
+                .command(csharpExePath)
+                .redirectErrorStream(true);
+        return makeProcess(builder);
+    }
+
     @BeforeClass
     public static void setUpClass() throws IOException, InterruptedException, ExecutionException {
-        String serverJarPath = new File("Chat-Example/target/Chat-Example-1.0-SNAPSHOT-jar-with-dependencies.jar").getAbsolutePath();
-
-        ProcessBuilder pb = new ProcessBuilder()
-                .redirectErrorStream(true);
-
-        server = makeProcess(pb
-                .directory(new File("ChatIT"))
-                .command("java", "-cp", serverJarPath, "server.ServerDriver"));
+        server = makeServerProcess();
 
         int numClients = 5;
 
@@ -65,7 +97,7 @@ public class ChatIT {
             try {
                 int clientsLeft = numClients;
                 while (clientsLeft > 0) {
-                    String line = server.in.readLine();
+                    String line = server._in.readLine();
                     if (line.contains("has joined")) {
                         clientsLeft--;
                     }
@@ -77,12 +109,9 @@ public class ChatIT {
 
         for (int i = 0; i < numClients; i++) {
             final String clientName = "client" + i;
-            ProcessStreams client = makeProcess(pb
-                    .directory(new File("ChatIT/" + clientName))
-                    .command("java", "-cp", serverJarPath, "client.ClientDriver"));
+            ProcessStreams client = i % 2 == 0 ? makeJavaClientProcess(clientName) : makeCsharpClientProcess(clientName);
             clients.add(client);
-            client.out.write(clientName + "\n");
-            client.out.flush();
+            client.writeAndFlush(clientName + "\n");
         }
 
         executor.shutdown();
@@ -91,9 +120,9 @@ public class ChatIT {
 
     @AfterClass
     public static void tearDownClass() {
-        server.process.destroyForcibly();
+        server.end();
         clients.forEach(client -> {
-            client.process.destroyForcibly();
+            client.end();
         });
         FileUtils.deleteRecursive(new File("ChatIT"));
     }
@@ -106,10 +135,9 @@ public class ChatIT {
     @Test
     public void testSendingMessage() throws IOException {
         ProcessStreams sender = clients.get(0);
-        sender.out.write("Hello world!\n");
-        sender.out.flush();
+        sender.writeAndFlush("Hello world!\n");
         assertTrue(clients.stream().skip(1).allMatch(client -> {
-            return client.in.lines().anyMatch(line -> line.contains("Hello world!"));
+            return client._in.lines().anyMatch(line -> line.contains("Hello world!"));
         }));
     }
 
@@ -117,8 +145,7 @@ public class ChatIT {
     public void testWhisper() throws IOException {
         ProcessStreams sender = clients.get(0);
         ProcessStreams reciever = clients.get(1);
-        sender.out.write("/client1 1v1 me bro\n");
-        sender.out.flush();
-        assertTrue(reciever.in.lines().anyMatch(line -> line.contains("1v1 me bro")));
+        sender.writeAndFlush("/client1 1v1 me bro\n");
+        assertTrue(reciever._in.lines().anyMatch(line -> line.contains("1v1 me bro")));
     }
 }
