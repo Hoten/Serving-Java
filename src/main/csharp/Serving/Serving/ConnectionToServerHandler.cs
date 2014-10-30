@@ -1,4 +1,6 @@
-﻿using Newtonsoft.Json;
+﻿using MiscUtil.Conversion;
+using MiscUtil.IO;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -11,59 +13,14 @@ using System.Threading;
 
 namespace Serving
 {
-    public class BigEndianBinaryReader : BinaryReader
-    {
-        public BigEndianBinaryReader(Stream input, Encoding encoding)
-            : base(input, encoding) { }
-
-        public override short ReadInt16()
-        {
-            return IPAddress.HostToNetworkOrder(base.ReadInt16());
-        }
-
-        public override int ReadInt32()
-        {
-            return IPAddress.HostToNetworkOrder(base.ReadInt32());
-        }
-
-        public override string ReadString()
-        {
-            short len = ReadInt16();
-            byte[] chars = ReadBytes(len);
-            return Encoding.UTF8.GetString(chars);
-        }
-    }
-
-    public class BigEndianBinaryWriter : BinaryWriter
-    {
-        public BigEndianBinaryWriter(Stream output, Encoding encoding)
-            : base(output, encoding) { }
-
-        public override void Write(short value)
-        {
-            base.Write(IPAddress.HostToNetworkOrder(value));
-        }
-
-        public override void Write(int value)
-        {
-            base.Write(IPAddress.HostToNetworkOrder(value));
-        }
-
-        public override void Write(String str)
-        {
-            Write((short)str.Length);
-            Write(Encoding.UTF8.GetBytes(str));
-        }
-    }
-
     public abstract class ConnectionToServerHandler
     {
         public String LocalDataFolder { get; private set; }
 
         private Thread _dataHandleThread;
         private Socket _socket;
-        private BinaryReader _in;
-        private BinaryWriter _out;
+        private JavaBinaryReader _in;
+        private JavaBinaryWriter _out;
         private Protocols _protocols;
         private BoundDest _boundTo;
         private BoundDest _boundFrom;
@@ -74,8 +31,6 @@ namespace Serving
             _protocols = protocols;
             _boundTo = boundTo;
             _boundFrom = boundTo == BoundDest.CLIENT ? BoundDest.SERVER : BoundDest.CLIENT;
-            LocalDataFolder = _in.ReadString(); // :(
-            Directory.CreateDirectory(LocalDataFolder);
         }
 
         public void Start()
@@ -83,6 +38,26 @@ namespace Serving
             _dataHandleThread = new Thread(() =>
             {
                 Thread.CurrentThread.IsBackground = true;
+
+                /*String test = "a";
+                do { 
+                    test = test + test; 
+                } while (test.Length < 2000);
+
+                _out.WriteJavaUTF(test);
+
+                _out.Write(123456);
+                _out.Write((short)1234);
+                _out.Write((byte)123);
+
+                Console.WriteLine("gettting data");
+                Console.WriteLine(_in.ReadJavaUTF());
+                Console.WriteLine(_in.ReadInt32());
+                Console.WriteLine(_in.ReadInt16());
+                Console.WriteLine(_in.ReadByte());*/
+
+                LocalDataFolder = _in.ReadJavaUTF(); // :(
+                Directory.CreateDirectory(LocalDataFolder);
                 RespondToHashes();
                 ReadNewFilesFromServer();
                 OnConnectionSettled();
@@ -98,7 +73,7 @@ namespace Serving
 
         protected abstract void HandleData(int type, Dictionary<String, String> data);
 
-        protected abstract void HandleData(int type, BinaryReader data);
+        protected abstract void HandleData(int type, JavaBinaryReader data);
 
         public void Send(Message message)
         {
@@ -137,8 +112,9 @@ namespace Serving
             _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             _socket.Connect(host, port);
             var stream = new NetworkStream(_socket);
-            _in = new BigEndianBinaryReader(stream, Encoding.UTF8);
-            _out = new BigEndianBinaryWriter(stream, Encoding.UTF8);
+            
+            _in = new JavaBinaryReader(stream);
+            _out = new JavaBinaryWriter(stream);
         }
 
         private void RespondToHashes()
@@ -147,12 +123,12 @@ namespace Serving
             var localFiles = new List<String>(Directory.GetFiles(LocalDataFolder));
             var filesToRequest = CompareFileHashes(localFiles, hashes);
             var json = JsonConvert.SerializeObject(filesToRequest);
-            _out.Write(json);
+            _out.WriteJavaUTF(json);
         }
 
         private Dictionary<String, sbyte[]> ReadFileHashesFromServer()
         {
-            var jsonHashes = _in.ReadString();
+            var jsonHashes = _in.ReadJavaUTF();
             return JsonConvert.DeserializeObject<Dictionary<String, sbyte[]>>(jsonHashes);
         }
 
@@ -192,7 +168,7 @@ namespace Serving
             int numFiles = _in.ReadInt32();
             for (int i = 0; i < numFiles; i++)
             {
-                var fileName = _in.ReadString();
+                var fileName = _in.ReadJavaUTF();
                 int length = _in.ReadInt32();
                 var data = _in.ReadBytes(length);
                 var path = System.IO.Path.Combine(LocalDataFolder, fileName);
@@ -213,9 +189,9 @@ namespace Serving
             {
                 HandleData(type, interpreted as Dictionary<String, String>);
             }
-            else if (interpreted is BinaryReader)
+            else if (interpreted is JavaBinaryReader)
             {
-                HandleData(type, interpreted as BinaryReader);
+                HandleData(type, interpreted as JavaBinaryReader);
             }
         }
 

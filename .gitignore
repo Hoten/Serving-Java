@@ -213,15 +213,21 @@ pip-log.txt
 
 #Mr Developer
 .mr.developer.cfg
-/Chat Example/nbproject/private/
-/Chat Example/clientdata/
-/Chat Example/localdata/
+
 
 #############
 ## Maven
 #############
 
 target/
+
+#############
+## Serving
+#############
+
+/Chat-Example/nbproject/private/
+/Chat-Example/clientdata/
+/Chat-Example/localdata/
 
 #####################
 ## Visual Studios

@@ -2,6 +2,7 @@ package hoten.serving;
 
 import java.io.DataOutputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -54,5 +55,15 @@ public class FileUtils {
 
     public static byte[] md5HashFile(File file) {
         return new MD5Hash().hash(getFileBytes(file));
+    }
+
+    public static boolean deleteRecursive(File path) {
+        boolean ret = true;
+        if (path.isDirectory()) {
+            for (File f : path.listFiles()) {
+                ret = ret && FileUtils.deleteRecursive(f);
+            }
+        }
+        return ret && path.delete();
     }
 }

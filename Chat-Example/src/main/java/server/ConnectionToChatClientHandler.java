@@ -37,6 +37,7 @@ public class ConnectionToChatClientHandler extends SocketHandler {
         switch (Serverbound.values()[type]) {
             case SetUsername:
                 username = data.get("username").getAsString();
+                System.out.println(username + " has joined.");
                 message = new JsonMessageBuilder()
                         .protocol(outbound(PeerJoin))
                         .set("username", username)

@@ -42,7 +42,7 @@ namespace ChatClient
             }
         }
 
-        protected override void HandleData(int type, BinaryReader data) { }
+        protected override void HandleData(int type, JavaBinaryReader data) { }
 
         public void SendUsername(String username)
         {

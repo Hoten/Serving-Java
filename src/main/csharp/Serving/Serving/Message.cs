@@ -7,6 +7,19 @@ using System.Text;
 
 namespace Serving
 {
+    static class StreamUtils {
+        public static void CopyTo(this Stream input, Stream output)
+        {
+            byte[] buffer = new byte[16 * 1024]; // Fairly arbitrary size
+            int bytesRead;
+
+            while ((bytesRead = input.Read(buffer, 0, buffer.Length)) > 0)
+            {
+                output.Write(buffer, 0, bytesRead);
+            }
+        }
+    }
+
     class Compressor
     {
         public byte[] Compress(byte[] data)
@@ -15,7 +28,7 @@ namespace Serving
             {
                 using (var tinyStream = new GZipStream(outStream, CompressionMode.Compress))
                 using (var mStream = new MemoryStream(data))
-                    mStream.CopyTo(tinyStream);
+                    StreamUtils.CopyTo(mStream, outStream);
                 return outStream.ToArray();
             }
         }
@@ -29,7 +42,7 @@ namespace Serving
             using (var bigStream = new GZipStream(inStream, CompressionMode.Decompress))
             using (var bigStreamOut = new MemoryStream())
             {
-                bigStream.CopyTo(bigStreamOut);
+                StreamUtils.CopyTo(bigStream, bigStreamOut);
                 return bigStreamOut.ToArray();
             }
         }
@@ -74,10 +87,10 @@ namespace Serving
             return JsonConvert.DeserializeObject<Dictionary<String, String>>(json);
         }
 
-        private BinaryReader InterpretAsBinary()
+        private JavaBinaryReader InterpretAsBinary()
         {
             var stream = new MemoryStream(Data);
-            return new BigEndianBinaryReader(stream, Encoding.UTF8);
+            return new JavaBinaryReader(stream);
         }
     }
 }

@@ -21,7 +21,7 @@ public class ChatProtocols extends Protocols {
         add(BoundDest.CLIENT, 2, DataMethod.JSON, false);
         add(BoundDest.CLIENT, 3, DataMethod.JSON, false);
         add(BoundDest.CLIENT, 4, DataMethod.JSON, false);
-        
+
         add(BoundDest.SERVER, 0, DataMethod.JSON, false);
         add(BoundDest.SERVER, 1, DataMethod.JSON, false);
         add(BoundDest.SERVER, 2, DataMethod.JSON, false);

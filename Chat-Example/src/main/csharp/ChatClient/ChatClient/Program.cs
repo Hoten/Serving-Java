@@ -10,6 +10,7 @@ namespace ChatClient
             Chat chat = new Chat();
             ConnectionToChatServerHandler conn = new ConnectionToChatServerHandler(chat, "localhost", 1234);
             conn.Start();
+            
             while (true) { } // :(
         }
     }

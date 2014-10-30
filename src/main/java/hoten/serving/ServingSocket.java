@@ -1,6 +1,7 @@
 package hoten.serving;
 
 import com.google.gson.Gson;
+import hoten.serving.Protocols.Protocol;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
@@ -25,17 +26,19 @@ public abstract class ServingSocket<T extends SocketHandler> {
     final private File _clientDataFolder;
     final private String _localDataFolderName;
     final private String _jsonClientDataHashes;
+    final private Protocols _protocols;
     final protected List<T> _clients = new CopyOnWriteArrayList();
 
-    public ServingSocket(int port, File clientDataFolder, String localDataFolderName) throws IOException {
+    public ServingSocket(int port, Protocols protocols, File clientDataFolder, String localDataFolderName) throws IOException {
+        _protocols = protocols;
         _clientDataFolder = clientDataFolder;
         _localDataFolderName = localDataFolderName;
         _jsonClientDataHashes = hashFiles();
         _socket = new ServerSocket(port);
     }
 
-    public ServingSocket(int port) throws IOException {
-        this(port, null, null);
+    public ServingSocket(int port, Protocols protocols) throws IOException {
+        this(port, protocols, null, null);
     }
 
     protected abstract T makeNewConnection(Socket newConnection) throws IOException;
@@ -46,6 +49,19 @@ public abstract class ServingSocket<T extends SocketHandler> {
             while (true) {
                 try {
                     T newClient = makeNewConnection(_socket.accept());
+                    System.out.println("found new client");
+                    
+                    /*newClient._out.write(123456);
+                    newClient._out.writeShort(1234);
+                    newClient._out.writeByte(123);
+                    newClient._out.writeUTF("test string");*/
+                    
+                    
+                    /*newClient._out.writeUTF(newClient._in.readUTF());
+                    newClient._out.writeInt(newClient._in.readInt());
+                    newClient._out.writeShort(newClient._in.readShort());
+                    newClient._out.writeByte(newClient._in.readByte());*/
+                    
                     newClient._out.writeUTF(_localDataFolderName);
                     sendFileHashes(newClient._out);
                     sendRequestedFiles(newClient._in, newClient._out);
@@ -58,6 +74,7 @@ public abstract class ServingSocket<T extends SocketHandler> {
             }
         });
     }
+
     public void sendTo(Message message, T client) {
         try {
             client.send(message);
@@ -86,11 +103,15 @@ public abstract class ServingSocket<T extends SocketHandler> {
     public void sendToAllBut(Message message, SocketHandler client) {
         sendTo(message, (c) -> (c != client));
     }
-    
+
     public void close() {
         _clients.stream().forEach((c) -> {
             c.closeIfOpen();
         });
+    }
+
+    protected Protocol outbound(Enum protocolEnum) {
+        return _protocols.get(Protocols.BoundDest.CLIENT, protocolEnum.ordinal());
     }
 
     private void sendFileHashes(DataOutputStream out) throws IOException {
