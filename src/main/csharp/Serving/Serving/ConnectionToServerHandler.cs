@@ -1,15 +1,11 @@
-﻿using MiscUtil.Conversion;
-using MiscUtil.IO;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Net.Sockets;
 using System.Security.Cryptography;
-using System.Text;
 using System.Threading;
 
 namespace Serving
@@ -39,24 +35,6 @@ namespace Serving
             _dataHandleThread = new Thread(() =>
             {
                 Thread.CurrentThread.IsBackground = true;
-
-                /*String test = "a";
-                do { 
-                    test = test + test; 
-                } while (test.Length < 2000);
-
-                _out.WriteJavaUTF(test);
-
-                _out.Write(123456);
-                _out.Write((short)1234);
-                _out.Write((byte)123);
-
-                Console.WriteLine("gettting data");
-                Console.WriteLine(_in.ReadJavaUTF());
-                Console.WriteLine(_in.ReadInt32());
-                Console.WriteLine(_in.ReadInt16());
-                Console.WriteLine(_in.ReadByte());*/
-
                 LocalDataFolder = _in.ReadJavaUTF(); // :(
                 Directory.CreateDirectory(LocalDataFolder);
                 RespondToHashes();
@@ -113,7 +91,6 @@ namespace Serving
             _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             _socket.Connect(host, port);
             var stream = new NetworkStream(_socket);
-            
             _in = new JavaBinaryReader(stream);
             _out = new JavaBinaryWriter(stream);
         }
@@ -124,6 +101,7 @@ namespace Serving
             var localFiles = new List<String>(Directory.GetFiles(LocalDataFolder));
             var filesToRequest = CompareFileHashes(localFiles, hashes);
             var json = JsonConvert.SerializeObject(filesToRequest);
+
             _out.WriteJavaUTF(json);
         }
 
@@ -136,7 +114,6 @@ namespace Serving
         private List<String> CompareFileHashes(List<String> files, Dictionary<String, sbyte[]> hashes)
         {
             var filesToRequest = new List<String>();
-            var md5 = MD5.Create();
 
             foreach (var entry in hashes)
             {
@@ -151,13 +128,13 @@ namespace Serving
                 }
                 else
                 {
-                    using (var stream = File.OpenRead(path))
+                    var bytes = File.ReadAllBytes(path);
+                    var localHash = MD5.Create().ComputeHash(bytes);
+                    sbyte[] signed = new sbyte[localHash.Length]; // :(
+                    Buffer.BlockCopy(localHash, 0, signed, 0, localHash.Length);
+                    if (!fileHash.SequenceEqual(signed))
                     {
-                        var localHash = (sbyte[])(Array)md5.ComputeHash(stream);
-                        if (!fileHash.SequenceEqual(localHash))
-                        {
-                            filesToRequest.Add(fileName);
-                        }
+                        filesToRequest.Add(fileName);
                     }
                 }
             }

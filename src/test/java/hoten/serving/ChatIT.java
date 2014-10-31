@@ -23,51 +23,17 @@ import static org.junit.Assert.*;
 
 public class ChatIT {
 
-    private static class ProcessStreams {
-
-        public ProcessStreams(Process process, BufferedReader in, BufferedWriter out) {
-            _process = process;
-            _in = in;
-            _out = out;
-        }
-
-        final Process _process;
-        final BufferedReader _in;
-        final BufferedWriter _out;
-
-        public void writeAndFlush(String str) throws IOException {
-            _out.write(str);
-            _out.flush();
-        }
-
-        public String readLine() throws IOException {
-            return _in.readLine();
-        }
-
-        public void end() {
-            _process.destroyForcibly();
-        }
-    }
-
     static ProcessStreams server;
     static List<ProcessStreams> clients = new ArrayList();
     static String jarPath = new File("Chat-Example/target/Chat-Example-1.0-SNAPSHOT-jar-with-dependencies.jar").getAbsolutePath();
     static String csharpExePath = new File("Chat-Example/src/main/csharp/ChatClient/ChatClient/bin/Release/ChatClient").getAbsolutePath();
-
-    private static ProcessStreams makeProcess(ProcessBuilder builder) throws IOException {
-        builder.directory().mkdirs();
-        Process process = builder.start();
-        BufferedReader in = new BufferedReader(new InputStreamReader(process.getInputStream()));
-        BufferedWriter out = new BufferedWriter(new OutputStreamWriter(process.getOutputStream()));
-        return new ProcessStreams(process, in, out);
-    }
 
     private static ProcessStreams makeServerProcess() throws IOException {
         ProcessBuilder builder = new ProcessBuilder()
                 .directory(new File("ChatIT"))
                 .command("java", "-cp", jarPath, "server.ServerDriver")
                 .redirectErrorStream(true);
-        return makeProcess(builder);
+        return ProcessStreams.makeProcess(builder);
     }
 
     private static ProcessStreams makeJavaClientProcess(String clientName) throws IOException {
@@ -75,7 +41,7 @@ public class ChatIT {
                 .directory(new File("ChatIT/" + clientName))
                 .command("java", "-cp", jarPath, "client.ClientDriver")
                 .redirectErrorStream(true);
-        return makeProcess(builder);
+        return ProcessStreams.makeProcess(builder);
     }
 
     private static ProcessStreams makeCsharpClientProcess(String clientName) throws IOException {
@@ -83,7 +49,7 @@ public class ChatIT {
                 .directory(new File("ChatIT/" + clientName))
                 .command(csharpExePath)
                 .redirectErrorStream(true);
-        return makeProcess(builder);
+        return ProcessStreams.makeProcess(builder);
     }
 
     @BeforeClass

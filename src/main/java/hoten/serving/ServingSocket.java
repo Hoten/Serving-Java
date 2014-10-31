@@ -49,19 +49,6 @@ public abstract class ServingSocket<T extends SocketHandler> {
             while (true) {
                 try {
                     T newClient = makeNewConnection(_socket.accept());
-                    System.out.println("found new client");
-                    
-                    /*newClient._out.write(123456);
-                    newClient._out.writeShort(1234);
-                    newClient._out.writeByte(123);
-                    newClient._out.writeUTF("test string");*/
-                    
-                    
-                    /*newClient._out.writeUTF(newClient._in.readUTF());
-                    newClient._out.writeInt(newClient._in.readInt());
-                    newClient._out.writeShort(newClient._in.readShort());
-                    newClient._out.writeByte(newClient._in.readByte());*/
-                    
                     newClient._out.writeUTF(_localDataFolderName);
                     sendFileHashes(newClient._out);
                     sendRequestedFiles(newClient._in, newClient._out);
@@ -118,7 +105,7 @@ public abstract class ServingSocket<T extends SocketHandler> {
         if (_jsonClientDataHashes != null) {
             out.writeUTF(_jsonClientDataHashes);
         } else {
-            out.writeUTF("");
+            out.writeUTF("[]");
         }
     }
 
