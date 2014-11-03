@@ -22,6 +22,7 @@ import java.util.logging.Logger;
 //TODO abstract out file stuff
 public abstract class ServingSocket<T extends SocketHandler> {
 
+    final private ExecutorService exec = Executors.newCachedThreadPool();
     final private ServerSocket _socket;
     final private File _clientDataFolder;
     final private String _localDataFolderName;
@@ -44,22 +45,29 @@ public abstract class ServingSocket<T extends SocketHandler> {
     protected abstract T makeNewConnection(Socket newConnection) throws IOException;
 
     public void startServer() {
-        ExecutorService exec = Executors.newCachedThreadPool();
         exec.execute(() -> {
             while (true) {
                 try {
-                    T newClient = makeNewConnection(_socket.accept());
-                    newClient._out.writeUTF(_localDataFolderName);
-                    sendFileHashes(newClient._out);
-                    sendRequestedFiles(newClient._in, newClient._out);
-                    newClient.onConnectionSettled();
-                    exec.execute(newClient::processDataUntilClosed);
-                    _clients.add(newClient);
+                    final T newClient = makeNewConnection(_socket.accept());
+                    exec.execute(() -> setupNewClient(newClient));
                 } catch (IOException ex) {
                     Logger.getLogger(ServingSocket.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
         });
+    }
+
+    private void setupNewClient(T newClient) {
+        try {
+            newClient._out.writeUTF(_localDataFolderName);
+            sendFileHashes(newClient._out);
+            sendRequestedFiles(newClient._in, newClient._out);
+            newClient.onConnectionSettled();
+            exec.execute(newClient::processDataUntilClosed);
+            _clients.add(newClient);
+        } catch (IOException ex) {
+            Logger.getLogger(ServingSocket.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     public void sendTo(Message message, T client) {
