@@ -66,4 +66,9 @@ public class FileUtils {
         }
         return ret && path.delete();
     }
+    
+    public static String readTextFile(File file) {
+        byte[] bytes = getFileBytes(file);
+        return new String(bytes);
+    }
 }
