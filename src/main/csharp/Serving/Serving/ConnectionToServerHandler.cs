@@ -32,20 +32,21 @@ namespace Serving
 
         public void Start()
         {
-            _dataHandleThread = new Thread(() =>
-            {
-                Thread.CurrentThread.IsBackground = true;
-                LocalDataFolder = _in.ReadJavaUTF(); // :(
-                Directory.CreateDirectory(LocalDataFolder);
-                RespondToHashes();
-                ReadNewFilesFromServer();
-                OnConnectionSettled();
-                while (true)
-                {
-                    HandleData();
-                }
-            });
+            _dataHandleThread = new Thread(Run);
             _dataHandleThread.Start();
+        }
+
+        protected virtual void Run() {
+            Thread.CurrentThread.IsBackground = true;
+            LocalDataFolder = _in.ReadJavaUTF(); // :(
+            Directory.CreateDirectory(LocalDataFolder);
+            RespondToHashes();
+            ReadNewFilesFromServer();
+            OnConnectionSettled();
+            while (true)
+            {
+                HandleData();
+            }
         }
 
         protected abstract void OnConnectionSettled();
