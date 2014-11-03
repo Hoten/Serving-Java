@@ -32,7 +32,7 @@ public final class Message {
             case BINARY:
                 return interpretAsBinary();
         }
-        return data;
+        return null;
     }
 
     JsonObject interpretAsJson() throws UnsupportedEncodingException {

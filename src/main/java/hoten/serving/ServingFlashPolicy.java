@@ -50,11 +50,9 @@ public class ServingFlashPolicy {
     public void start() {
         _executor.submit(() -> {
             while (true) {
-                Socket socket = _servingSocket.accept();
-                PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-                out.println(_policyFile);
-                out.close();
-                socket.close();
+                try (Socket socket = _servingSocket.accept(); PrintWriter out = new PrintWriter(socket.getOutputStream(), true)) {
+                    out.println(_policyFile);
+                }
             }
         });
     }

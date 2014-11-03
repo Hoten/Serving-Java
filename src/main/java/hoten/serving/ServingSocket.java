@@ -92,15 +92,16 @@ public abstract class ServingSocket<T extends SocketHandler> {
     }
 
     public void sendToAll(Message message) {
-        sendTo(message, (c) -> true);
+        sendTo(message, c -> true);
     }
 
     public void sendToAllBut(Message message, SocketHandler client) {
-        sendTo(message, (c) -> (c != client));
+        sendTo(message, c -> (c != client));
     }
 
     public void close() {
-        _clients.stream().forEach((c) -> {
+        exec.shutdown();
+        _clients.stream().forEach(c -> {
             c.closeIfOpen();
         });
     }
@@ -133,7 +134,7 @@ public abstract class ServingSocket<T extends SocketHandler> {
     private String hashFiles() {
         Map<String, byte[]> hashes = new HashMap();
         List<File> files = FileUtils.getAllFilesInDirectory(_clientDataFolder);
-        files.stream().forEach((file) -> {
+        files.stream().forEach(file -> {
             String relativePath = _clientDataFolder.toPath().relativize(file.toPath()).toString();
             byte[] hash = FileUtils.md5HashFile(file);
             hashes.put(relativePath, hash);

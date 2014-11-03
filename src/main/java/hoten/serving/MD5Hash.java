@@ -12,8 +12,7 @@ public class MD5Hash {
             MessageDigest algorithm = MessageDigest.getInstance("MD5");
             algorithm.reset();
             algorithm.update(bytes);
-            byte[] messageDigest = algorithm.digest();
-            return messageDigest;
+            return algorithm.digest();
         } catch (NoSuchAlgorithmException ex) {
             Logger.getLogger(MD5Hash.class.getName()).log(Level.SEVERE, null, ex);
         }

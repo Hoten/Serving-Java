@@ -51,7 +51,7 @@ public abstract class SocketHandler {
             _in.close();
             _socket.close();
         } catch (IOException ex) {
-            System.out.println("Error closing streams " + ex);
+            System.err.println("Error closing streams " + ex);
         }
     }
 
