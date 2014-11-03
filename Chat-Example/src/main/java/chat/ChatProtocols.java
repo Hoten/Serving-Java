@@ -1,6 +1,6 @@
 package chat;
 
-import hoten.serving.Protocols;
+import hoten.serving.message.Protocols;
 
 public class ChatProtocols extends Protocols {
 

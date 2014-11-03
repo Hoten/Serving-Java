@@ -1,6 +1,6 @@
 package client;
 
-import hoten.serving.FileUtils;
+import hoten.serving.fileutils.FileUtils;
 import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;

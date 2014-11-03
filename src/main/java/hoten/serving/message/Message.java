@@ -1,9 +1,11 @@
-package hoten.serving;
+package hoten.serving.message;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import hoten.serving.Protocols.Protocol;
+import hoten.serving.fileutils.Compressor;
+import hoten.serving.fileutils.Decompressor;
+import hoten.serving.message.Protocols.Protocol;
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.UnsupportedEncodingException;

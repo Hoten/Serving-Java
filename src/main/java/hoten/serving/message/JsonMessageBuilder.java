@@ -1,7 +1,7 @@
-package hoten.serving;
+package hoten.serving.message;
 
 import com.google.gson.Gson;
-import hoten.serving.Protocols.Protocol;
+import hoten.serving.message.Protocols.Protocol;
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.Map;

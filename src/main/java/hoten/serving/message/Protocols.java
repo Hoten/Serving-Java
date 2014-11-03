@@ -1,4 +1,4 @@
-package hoten.serving;
+package hoten.serving.message;
 
 import java.util.ArrayList;
 import java.util.List;

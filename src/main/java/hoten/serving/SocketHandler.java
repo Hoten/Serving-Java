@@ -1,7 +1,9 @@
 package hoten.serving;
 
+import hoten.serving.message.Protocols;
+import hoten.serving.message.Message;
 import com.google.gson.JsonObject;
-import hoten.serving.Protocols.Protocol;
+import hoten.serving.message.Protocols.Protocol;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;

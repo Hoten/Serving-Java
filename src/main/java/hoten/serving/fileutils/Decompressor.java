@@ -1,4 +1,4 @@
-package hoten.serving;
+package hoten.serving.fileutils;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;

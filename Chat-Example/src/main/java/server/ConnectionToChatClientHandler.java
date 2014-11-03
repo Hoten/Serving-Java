@@ -2,9 +2,9 @@ package server;
 
 import chat.ChatProtocols;
 import chat.ChatProtocols.Serverbound;
-import hoten.serving.JsonMessageBuilder;
-import hoten.serving.Message;
-import hoten.serving.Protocols;
+import hoten.serving.message.JsonMessageBuilder;
+import hoten.serving.message.Message;
+import hoten.serving.message.Protocols;
 import hoten.serving.SocketHandler;
 import java.io.DataInputStream;
 import java.io.IOException;

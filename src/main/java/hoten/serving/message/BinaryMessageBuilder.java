@@ -1,6 +1,6 @@
-package hoten.serving;
+package hoten.serving.message;
 
-import hoten.serving.Protocols.Protocol;
+import hoten.serving.message.Protocols.Protocol;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;

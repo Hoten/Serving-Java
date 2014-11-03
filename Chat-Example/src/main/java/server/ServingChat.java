@@ -1,7 +1,7 @@
 package server;
 
 import chat.ChatProtocols;
-import hoten.serving.Message;
+import hoten.serving.message.Message;
 import hoten.serving.ServingSocket;
 import java.io.File;
 import java.io.IOException;
