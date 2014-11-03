@@ -6,7 +6,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 
-class BinaryMessageBuilder {
+public class BinaryMessageBuilder {
 
     private final ByteArrayOutputStream _out;
     private Protocol _protocol;
