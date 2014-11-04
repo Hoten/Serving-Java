@@ -11,6 +11,7 @@ import java.util.logging.Logger;
 public class JsonMessageBuilder {
     private final Map _map = new HashMap();
     private Protocol _protocol;
+    private Gson _gson = new Gson();
     
     public JsonMessageBuilder set(String key, Object value) {
         _map.put(key, value);
@@ -22,10 +23,15 @@ public class JsonMessageBuilder {
         return this;
     }
     
+    public JsonMessageBuilder gson(Gson gson) { 
+        _gson = gson;
+        return this;
+    }
+    
     public Message build() {
         byte[] data = null;
         try {
-            data = new Gson().toJson(_map, Map.class).getBytes("UTF-8");
+            data = _gson.toJson(_map, Map.class).getBytes("UTF-8");
         } catch (UnsupportedEncodingException ex) {
             Logger.getLogger(JsonMessageBuilder.class.getName()).log(Level.SEVERE, null, ex);
         }

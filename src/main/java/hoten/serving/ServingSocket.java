@@ -99,7 +99,7 @@ public abstract class ServingSocket<T extends SocketHandler> {
     }
 
     public void sendToAllBut(Message message, SocketHandler client) {
-        sendTo(message, c -> (c != client));
+        sendTo(message, c -> c != client);
     }
 
     public void close() {
