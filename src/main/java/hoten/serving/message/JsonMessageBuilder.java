@@ -1,7 +1,6 @@
 package hoten.serving.message;
 
 import com.google.gson.Gson;
-import hoten.serving.message.Protocols.Protocol;
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.Map;
@@ -10,7 +9,8 @@ import java.util.logging.Logger;
 
 public class JsonMessageBuilder {
     private final Map _map = new HashMap();
-    private Protocol _protocol;
+    private String _type;
+    private boolean _compressed;
     private Gson _gson = new Gson();
     
     public JsonMessageBuilder set(String key, Object value) {
@@ -18,8 +18,13 @@ public class JsonMessageBuilder {
         return this;
     }
     
-    public JsonMessageBuilder protocol(Protocol protocol) { 
-        _protocol = protocol;
+    public JsonMessageBuilder type(String type) {
+        _type = type;
+        return this;
+    }
+
+    public JsonMessageBuilder compressed(boolean compressed) {
+        _compressed = compressed;
         return this;
     }
     
@@ -35,6 +40,6 @@ public class JsonMessageBuilder {
         } catch (UnsupportedEncodingException ex) {
             Logger.getLogger(JsonMessageBuilder.class.getName()).log(Level.SEVERE, null, ex);
         }
-        return Message.outboundMessage(_protocol, data);
+        return new Message(data, _type, _compressed);
     }
 }

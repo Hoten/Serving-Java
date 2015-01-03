@@ -1,10 +1,10 @@
 ﻿using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Sockets;
+using System.Reflection;
 using System.Security.Cryptography;
 using System.Threading;
 
@@ -18,16 +18,10 @@ namespace Serving
         private Socket _socket;
         private JavaBinaryReader _in;
         private JavaBinaryWriter _out;
-        private Protocols _protocols;
-        private BoundDest _boundTo;
-        private BoundDest _boundFrom;
 
-        public ConnectionToServerHandler(String host, int port, Protocols protocols, BoundDest boundTo)
+        public ConnectionToServerHandler(String host, int port)
         {
             Connect(host, port);
-            _protocols = protocols;
-            _boundTo = boundTo;
-            _boundFrom = boundTo == BoundDest.CLIENT ? BoundDest.SERVER : BoundDest.CLIENT;
         }
 
         public void Start()
@@ -51,10 +45,6 @@ namespace Serving
 
         protected abstract void OnConnectionSettled();
 
-        protected abstract void HandleData(int type, JObject data);
-
-        protected abstract void HandleData(int type, JavaBinaryReader data);
-
         public void Send(Message message)
         {
             try
@@ -62,7 +52,8 @@ namespace Serving
                 lock (_out)
                 {
                     _out.Write(message.Data.Length);
-                    _out.Write(message.Protocol.Type);
+                    _out.WriteJavaUTF(message.Type);
+                    _out.Write(message.Compressed);
                     _out.Write(message.Data);
                 }
             }
@@ -160,23 +151,19 @@ namespace Serving
         private void HandleData()
         {
             int dataSize = _in.ReadInt32();
-            int type = _in.ReadInt32();
-            byte[] bytes = _in.ReadBytes(dataSize);
-            Message message = Message.InboundMessage(_protocols.Get(_boundFrom, type), bytes);
-            Object interpreted = message.Interpret();
-            if (interpreted is JObject)
-            {
-                HandleData(type, interpreted as JObject);
-            }
-            else if (interpreted is JavaBinaryReader)
-            {
-                HandleData(type, interpreted as JavaBinaryReader);
-            }
-        }
+            var type = _in.ReadJavaUTF();
+            var compressed = _in.ReadBoolean();
+            var bytes = _in.ReadBytes(dataSize);
 
-        protected Protocol Outbound(Enum protocolEnum)
-        {
-            return _protocols.Get(_boundTo, Convert.ToInt32(protocolEnum));
+            if (compressed)
+            {
+                bytes = new Decompressor().Uncompress(bytes);
+            }
+
+            var handlerType = MessageHandler<ConnectionToServerHandler, Object>.Get(type);
+            var method = handlerType.GetMethod("Handle");
+            var ins = Activator.CreateInstance(handlerType);
+            method.Invoke(ins, new Object[] { this, bytes });
         }
     }
 }

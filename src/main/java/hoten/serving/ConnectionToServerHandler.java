@@ -1,7 +1,6 @@
 package hoten.serving;
 
 import hoten.serving.fileutils.FileUtils;
-import hoten.serving.message.Protocols;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import java.io.File;
@@ -20,8 +19,8 @@ public abstract class ConnectionToServerHandler extends SocketHandler {
 
     public final File localDataFolder;
 
-    public ConnectionToServerHandler(Socket socket, Protocols protocols) throws IOException {
-        super(socket, protocols, Protocols.BoundDest.SERVER);
+    public ConnectionToServerHandler(Socket socket) throws IOException {
+        super(socket);
         localDataFolder = new File(_in.readUTF()); // :(
         localDataFolder.mkdirs();
     }

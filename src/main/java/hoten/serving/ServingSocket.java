@@ -1,10 +1,8 @@
 package hoten.serving;
 
 import hoten.serving.fileutils.FileUtils;
-import hoten.serving.message.Protocols;
 import hoten.serving.message.Message;
 import com.google.gson.Gson;
-import hoten.serving.message.Protocols.Protocol;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
@@ -23,35 +21,33 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 //TODO abstract out file stuff
-public abstract class ServingSocket<T extends SocketHandler> {
+public abstract class ServingSocket<S extends SocketHandler> {
 
     final private ExecutorService exec = Executors.newCachedThreadPool();
     final private ServerSocket _socket;
     final private File _clientDataFolder;
     final private String _localDataFolderName;
     final private String _jsonClientDataHashes;
-    final private Protocols _protocols;
-    final protected List<T> _clients = new CopyOnWriteArrayList();
+    final protected List<S> _clients = new CopyOnWriteArrayList();
 
-    public ServingSocket(int port, Protocols protocols, File clientDataFolder, String localDataFolderName) throws IOException {
-        _protocols = protocols;
+    public ServingSocket(int port, File clientDataFolder, String localDataFolderName) throws IOException {
         _clientDataFolder = clientDataFolder;
         _localDataFolderName = localDataFolderName;
         _jsonClientDataHashes = hashFiles();
         _socket = new ServerSocket(port);
     }
 
-    public ServingSocket(int port, Protocols protocols) throws IOException {
-        this(port, protocols, null, null);
+    public ServingSocket(int port) throws IOException {
+        this(port, null, null);
     }
 
-    protected abstract T makeNewConnection(Socket newConnection) throws IOException;
+    protected abstract S makeNewConnection(Socket newConnection) throws IOException;
 
     public void startServer() {
         exec.execute(() -> {
             while (true) {
                 try {
-                    final T newClient = makeNewConnection(_socket.accept());
+                    final S newClient = makeNewConnection(_socket.accept());
                     exec.execute(() -> setupNewClient(newClient));
                 } catch (IOException ex) {
                     Logger.getLogger(ServingSocket.class.getName()).log(Level.SEVERE, null, ex);
@@ -60,7 +56,7 @@ public abstract class ServingSocket<T extends SocketHandler> {
         });
     }
 
-    private void setupNewClient(T newClient) {
+    private void setupNewClient(S newClient) {
         try {
             newClient._out.writeUTF(_localDataFolderName);
             sendFileHashes(newClient._out);
@@ -73,7 +69,7 @@ public abstract class ServingSocket<T extends SocketHandler> {
         }
     }
 
-    public void sendTo(Message message, T client) {
+    public void sendTo(Message message, S client) {
         try {
             client.send(message);
         } catch (IOException ex) {
@@ -82,13 +78,13 @@ public abstract class ServingSocket<T extends SocketHandler> {
         }
     }
 
-    public void sendTo(Message message, Predicate<T> selector) {
+    public void sendTo(Message message, Predicate<S> selector) {
         _clients.stream().filter(selector).forEach((c) -> {
             sendTo(message, c);
         });
     }
 
-    public void sendToFirst(Message message, Predicate<T> selector) {
+    public void sendToFirst(Message message, Predicate<S> selector) {
         _clients.stream().filter(selector).findFirst().ifPresent((c) -> {
             sendTo(message, c);
         });
@@ -107,10 +103,6 @@ public abstract class ServingSocket<T extends SocketHandler> {
         _clients.stream().forEach(c -> {
             c.closeIfOpen();
         });
-    }
-
-    protected Protocol outbound(Enum protocolEnum) {
-        return _protocols.get(Protocols.BoundDest.CLIENT, protocolEnum.ordinal());
     }
 
     private void sendFileHashes(DataOutputStream out) throws IOException {

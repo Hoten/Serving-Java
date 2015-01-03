@@ -54,10 +54,14 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Chat.cs" />
-    <Compile Include="ChatProtocols.cs" />
     <Compile Include="ConnectionToChatServerHandler.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Protocol\Print.cs" />
+    <Compile Include="Protocol\Whisper.cs" />
+    <Compile Include="Protocol\PeerDisconnect.cs" />
+    <Compile Include="Protocol\ChatMessage.cs" />
+    <Compile Include="Protocol\PeerJoin.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

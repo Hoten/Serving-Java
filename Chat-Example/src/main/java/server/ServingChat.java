@@ -1,6 +1,5 @@
 package server;
 
-import chat.ChatProtocols;
 import hoten.serving.message.Message;
 import hoten.serving.ServingSocket;
 import java.io.File;
@@ -11,7 +10,7 @@ import java.util.stream.Collectors;
 public class ServingChat extends ServingSocket<ConnectionToChatClientHandler> {
 
     public ServingChat(int port, String clientDataDirName, String localDataDirName) throws IOException {
-        super(port, new ChatProtocols(), new File(clientDataDirName), localDataDirName);
+        super(port, new File(clientDataDirName), localDataDirName);
     }
 
     public void sendToClientWithUsername(Message message, String username) {

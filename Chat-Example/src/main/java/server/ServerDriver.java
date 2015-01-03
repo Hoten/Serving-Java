@@ -1,13 +1,16 @@
 package server;
 
+import hoten.serving.message.MessageHandler;
 import hoten.serving.fileutils.FileUtils;
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Date;
 
 public class ServerDriver {
 
     public static void main(String[] args) throws IOException, InterruptedException {
+        MessageHandler.loadMessageHandlers(Arrays.asList("server.protocols"));
         int port = 1234;
         String clientDataDirName = "clientdata";
         String localDataDirName = "localdata";

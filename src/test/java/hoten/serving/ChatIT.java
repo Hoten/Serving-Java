@@ -1,17 +1,12 @@
 package hoten.serving;
 
 import hoten.serving.fileutils.FileUtils;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -54,8 +49,13 @@ public class ChatIT {
     }
 
     @BeforeClass
-    public static void setUpClass() throws IOException, InterruptedException, ExecutionException {
+    public static void setUpClass() throws Exception {
         server = makeServerProcess();
+
+        String firstLineFromServer = server._in.readLine();
+        if (!"Server started.".equalsIgnoreCase(firstLineFromServer)) {
+            throw new Exception();
+        }
 
         int numClients = 5;
 
@@ -97,6 +97,7 @@ public class ChatIT {
     @Test
     public void testWelcomeMessage() throws IOException {
         assertTrue(Files.exists(Paths.get("ChatIT/client0/localdata/welcome.txt")));
+        assertTrue(Files.exists(Paths.get("ChatIT/client1/localdata/welcome.txt")));
     }
 
     @Test

@@ -1,54 +1,27 @@
-﻿using Newtonsoft.Json.Linq;
-using Serving;
+﻿using Serving;
 using System;
-using System.Collections.Generic;
-using System.IO;
 
 namespace ChatClient
 {
     class ConnectionToChatServerHandler : ConnectionToServerHandler
     {
-        private Chat _chat;
+        public Chat Chat { get; private set; }
 
         public ConnectionToChatServerHandler(Chat chat, String host, int port)
-            : base(host, port, new ChatProtocols(), BoundDest.SERVER)
+            : base(host, port)
         {
-            _chat = chat;
+            Chat = chat;
         }
 
         protected override void OnConnectionSettled()
         {
-            _chat.StartChat(this);
+            Chat.StartChat(this);
         }
-
-        protected override void HandleData(int type, JObject data)
-        {
-            switch ((ChatProtocols.Clientbound)type)
-            {
-                case ChatProtocols.Clientbound.PeerJoin:
-                    _chat.AnnounceNewUser(data["username"].Value<String>());
-                    break;
-                case ChatProtocols.Clientbound.ChatMessage:
-                    _chat.Global(data["from"].Value<String>(), data["msg"].Value<String>());
-                    break;
-                case ChatProtocols.Clientbound.PeerDisconnect:
-                    _chat.AnnounceDisconnect(data["username"].Value<String>());
-                    break;
-                case ChatProtocols.Clientbound.PrivateMessage:
-                    _chat.Whisper(data["from"].Value<String>(), data["msg"].Value<String>());
-                    break;
-                case ChatProtocols.Clientbound.Print:
-                    _chat.Announce(data["msg"].Value<String>());
-                    break;
-            }
-        }
-
-        protected override void HandleData(int type, JavaBinaryReader data) { }
 
         public void SendUsername(String username)
         {
-            Message message = new JsonMessageBuilder()
-                    .Protocol(Outbound(ChatProtocols.Serverbound.SetUsername))
+            var message = new JsonMessageBuilder()
+                    .Type("SetUsername")
                     .Set("username", username)
                     .Build();
             Send(message);
@@ -56,16 +29,16 @@ namespace ChatClient
 
         public void Quit()
         {
-            Message message = new JsonMessageBuilder()
-                    .Protocol(Outbound(ChatProtocols.Serverbound.LogOff))
+            var message = new JsonMessageBuilder()
+                    .Type("LogOff")
                     .Build();
             Send(message);
         }
 
         public void SendMessage(String msg)
         {
-            Message message = new JsonMessageBuilder()
-                    .Protocol(Outbound(ChatProtocols.Serverbound.ChatMessage))
+            var message = new JsonMessageBuilder()
+                    .Type("ChatMessage")
                     .Set("msg", msg)
                     .Build();
             Send(message);
@@ -73,8 +46,8 @@ namespace ChatClient
 
         public void SendWhisper(String to, String msg)
         {
-            Message message = new JsonMessageBuilder()
-                    .Protocol(Outbound(ChatProtocols.Serverbound.PrivateMessage))
+            var message = new JsonMessageBuilder()
+                    .Type("Whisper")
                     .Set("to", to)
                     .Set("msg", msg)
                     .Build();

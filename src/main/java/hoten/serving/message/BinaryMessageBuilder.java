@@ -1,6 +1,5 @@
 package hoten.serving.message;
 
-import hoten.serving.message.Protocols.Protocol;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -9,14 +8,20 @@ import java.nio.file.Files;
 public class BinaryMessageBuilder {
 
     private final ByteArrayOutputStream _out;
-    private Protocol _protocol;
+    private String _type;
+    private boolean _compressed;
 
     public BinaryMessageBuilder() {
         _out = new ByteArrayOutputStream();
     }
 
-    public BinaryMessageBuilder protocol(Protocol protocol) {
-        _protocol = protocol;
+    public BinaryMessageBuilder type(String type) {
+        _type = type;
+        return this;
+    }
+
+    public BinaryMessageBuilder compressed(boolean compressed) {
+        _compressed = compressed;
         return this;
     }
 
@@ -80,6 +85,6 @@ public class BinaryMessageBuilder {
     }
 
     public Message build() {
-        return Message.outboundMessage(_protocol, _out.toByteArray());
+        return new Message(_out.toByteArray(), _type, _compressed);
     }
 }

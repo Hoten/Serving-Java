@@ -8,7 +8,8 @@ namespace Serving
     public class JsonMessageBuilder
     {
         private Dictionary<String, Object> _map = new Dictionary<String, Object>();
-        private Protocol _protocol;
+        private String _type;
+        private bool _compressed;
 
         public JsonMessageBuilder Set(String key, Object value)
         {
@@ -16,9 +17,15 @@ namespace Serving
             return this;
         }
 
-        public JsonMessageBuilder Protocol(Protocol protocol)
+        public JsonMessageBuilder Type(String type)
         {
-            _protocol = protocol;
+            _type = type;
+            return this;
+        }
+
+        public JsonMessageBuilder Compressed(bool compressed)
+        {
+            _compressed = compressed;
             return this;
         }
 
@@ -26,7 +33,7 @@ namespace Serving
         {
             var json = JsonConvert.SerializeObject(_map);
             var data = Encoding.UTF8.GetBytes(json);
-            return Message.OutboundMessage(_protocol, data);
+            return new Message(data, _type, _compressed);
         }
     }
 }
