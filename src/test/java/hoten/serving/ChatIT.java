@@ -12,10 +12,10 @@ import java.util.concurrent.TimeUnit;
 import org.apache.commons.io.FileUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import static org.junit.Assert.assertThat;
-import org.junit.Before;
 import static org.junit.internal.matchers.StringContains.containsString;
 
 public class ChatIT {
@@ -107,7 +107,7 @@ public class ChatIT {
     }
 
     @Test
-    public void testWelcomeMessage() throws IOException {
+    public void testWelcomeMessageWasDownloaded() throws IOException {
         assertTrue(Files.exists(Paths.get("ChatIT/client0/localdata/welcome.txt")));
         assertTrue(Files.exists(Paths.get("ChatIT/client1/localdata/welcome.txt")));
     }
