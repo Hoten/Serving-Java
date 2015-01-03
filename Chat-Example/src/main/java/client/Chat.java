@@ -1,13 +1,12 @@
 package client;
 
-import hoten.serving.fileutils.FileUtils;
 import java.io.File;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.util.Scanner;
 import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.apache.commons.io.FileUtils;
 
 public class Chat {
 
@@ -77,15 +76,11 @@ public class Chat {
         return continueChat;
     }
 
-    private void readWelcomeMesssage() {
-        try {
-            File f = new File(_serverConnection.localDataFolder, "welcome.txt");
-            String welcome = new String(FileUtils.getFileBytes(f), "UTF-8");
-            String formatted = String.format(welcome, _username);
-            System.out.println("\n" + formatted + "\n");
-        } catch (UnsupportedEncodingException ex) {
-            Logger.getLogger(Chat.class.getName()).log(Level.SEVERE, null, ex);
-        }
+    private void readWelcomeMesssage() throws IOException {
+        File f = new File(_serverConnection.localDataFolder, "welcome.txt");
+        String welcome = new String(FileUtils.readFileToByteArray(f), "UTF-8");
+        String formatted = String.format(welcome, _username);
+        System.out.println("\n" + formatted + "\n");
     }
 
     private void display(String msg) {

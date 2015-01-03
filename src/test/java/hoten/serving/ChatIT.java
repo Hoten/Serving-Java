@@ -1,6 +1,5 @@
 package hoten.serving;
 
-import hoten.serving.fileutils.FileUtils;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -10,6 +9,7 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import org.apache.commons.io.FileUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -90,11 +90,11 @@ public class ChatIT {
 
     @AfterClass
     public static void tearDownClass() throws IOException {
-        FileUtils.deleteRecursive(new File("ChatIT/"));
         server.end();
         clients.forEach(client -> {
             client.end();
         });
+        FileUtils.deleteDirectory(new File("ChatIT"));
         System.out.println("===========\nServer output: \n===========\n" + server.readAll());
     }
 

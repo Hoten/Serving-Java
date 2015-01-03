@@ -1,6 +1,5 @@
 package hoten.serving;
 
-import hoten.serving.fileutils.FileUtils;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import java.io.File;
@@ -9,11 +8,14 @@ import java.lang.reflect.Type;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.io.FileUtils;
 
 public abstract class ConnectionToServerHandler extends SocketHandler {
 
@@ -40,8 +42,8 @@ public abstract class ConnectionToServerHandler extends SocketHandler {
 
     private void respondToHashes() throws IOException {
         Map<String, byte[]> hashes = readFileHashesFromServer();
-        List<File> localFiles = FileUtils.getAllFilesInDirectory(localDataFolder);
-        List<String> filesToRequest = compareFileHashes(localFiles, hashes);
+        Collection<File> localFiles = FileUtils.listFiles(localDataFolder, null, true);
+        Collection<String> filesToRequest = compareFileHashes(localFiles, hashes);
         _out.writeUTF(new Gson().toJson(filesToRequest, List.class));
         localFiles.stream().forEach((f) -> {
             f.delete();
@@ -55,21 +57,25 @@ public abstract class ConnectionToServerHandler extends SocketHandler {
         return new Gson().fromJson(jsonHashes, type);
     }
 
-    private List<String> compareFileHashes(List<File> files, Map<String, byte[]> hashes) {
+    private Collection<String> compareFileHashes(Collection<File> files, Map<String, byte[]> hashes) {
         List<String> filesToRequest = new ArrayList();
         hashes.forEach((fileName, fileHash) -> {
-            File f = new File(localDataFolder, fileName);
+            try {
+                File f = new File(localDataFolder, fileName);
 
-            for (File cf : files) {
-                if (cf.equals(f)) {
-                    //remove this file as a candidate for pruning
-                    files.remove(cf);
-                    break;
+                for (File cf : files) {
+                    if (cf.equals(f)) {
+                        //remove this file as a candidate for pruning
+                        files.remove(cf);
+                        break;
+                    }
                 }
-            }
 
-            if (!f.exists() || !Arrays.equals(FileUtils.md5HashFile(f), fileHash)) {
-                filesToRequest.add(fileName);
+                if (!f.exists() || !Arrays.equals(DigestUtils.md5(FileUtils.readFileToString(f)), fileHash)) {
+                    filesToRequest.add(fileName);
+                }
+            } catch (IOException ex) {
+                Logger.getLogger(ConnectionToServerHandler.class.getName()).log(Level.SEVERE, null, ex);
             }
         });
         return filesToRequest;
@@ -83,7 +89,7 @@ public abstract class ConnectionToServerHandler extends SocketHandler {
             Logger.getLogger(ConnectionToServerHandler.class.getName()).log(Level.INFO, "Updating {0}, size = {1}", new Object[]{fileName, length});
             byte[] data = new byte[length];
             _in.readFully(data);
-            FileUtils.saveAs(new File(localDataFolder, fileName), data);
+            FileUtils.writeByteArrayToFile(new File(localDataFolder, fileName), data);
         }
         _out.write(0);//done updating files
     }

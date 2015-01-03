@@ -1,15 +1,16 @@
 package hoten.serving;
 
-import hoten.serving.fileutils.FileUtils;
 import hoten.serving.message.Message;
 import com.google.gson.Gson;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.file.Files;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,6 +20,8 @@ import java.util.concurrent.Executors;
 import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.io.FileUtils;
 
 //TODO abstract out file stuff
 public abstract class ServingSocket<S extends SocketHandler> {
@@ -109,7 +112,7 @@ public abstract class ServingSocket<S extends SocketHandler> {
         if (_jsonClientDataHashes != null) {
             out.writeUTF(_jsonClientDataHashes);
         } else {
-            out.writeUTF("[]");
+            out.writeUTF("[]"); // :(
         }
     }
 
@@ -128,11 +131,15 @@ public abstract class ServingSocket<S extends SocketHandler> {
 
     private String hashFiles() {
         Map<String, byte[]> hashes = new HashMap();
-        List<File> files = FileUtils.getAllFilesInDirectory(_clientDataFolder);
+        Collection<File> files = FileUtils.listFiles(_clientDataFolder, null, true);
         files.stream().forEach(file -> {
-            String relativePath = _clientDataFolder.toPath().relativize(file.toPath()).toString();
-            byte[] hash = FileUtils.md5HashFile(file);
-            hashes.put(relativePath, hash);
+            try (FileInputStream fis = new FileInputStream(file)) {
+                String relativePath = _clientDataFolder.toPath().relativize(file.toPath()).toString();
+                byte[] hash = DigestUtils.md5(fis);
+                hashes.put(relativePath, hash);
+            } catch (IOException ex) {
+                Logger.getLogger(ServingSocket.class.getName()).log(Level.SEVERE, null, ex);
+            }
         });
         return new Gson().toJson(hashes, Map.class);
     }
