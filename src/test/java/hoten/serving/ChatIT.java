@@ -10,19 +10,22 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
+import static org.junit.Assert.assertThat;
+import org.junit.Before;
+import static org.junit.internal.matchers.StringContains.containsString;
 
 public class ChatIT {
 
-    static ProcessStreams server;
-    static List<ProcessStreams> clients = new ArrayList();
-    static String jarPath = new File("Chat-Example/target/Chat-Example-1.0-SNAPSHOT-jar-with-dependencies.jar").getAbsolutePath();
-    static String csharpExePath = new File("Chat-Example/src/main/csharp/ChatClient/ChatClient/bin/Release/ChatClient").getAbsolutePath();
+    private static ProcessStreams server;
+    private static final List<ProcessStreams> clients = new ArrayList();
+    private static ProcessStreams aJavaClient;
+    private static ProcessStreams aCsharpClient;
+    private static final String jarPath = new File("Chat-Example/target/Chat-Example-1.0-SNAPSHOT-jar-with-dependencies.jar").getAbsolutePath();
+    private static final String csharpExePath = new File("Chat-Example/src/main/csharp/ChatClient/ChatClient/bin/Release/ChatClient").getAbsolutePath();
 
     private static ProcessStreams makeServerProcess() throws IOException {
         ProcessBuilder builder = new ProcessBuilder()
@@ -51,26 +54,23 @@ public class ChatIT {
     @BeforeClass
     public static void setUpClass() throws Exception {
         server = makeServerProcess();
-
-        String firstLineFromServer = server._in.readLine();
-        if (!"Server started.".equalsIgnoreCase(firstLineFromServer)) {
-            throw new Exception();
-        }
+        server.readLine();
 
         int numClients = 5;
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
-            try {
-                int clientsLeft = numClients;
-                while (clientsLeft > 0) {
-                    String line = server._in.readLine();
-                    if (line.contains("has joined")) {
-                        clientsLeft--;
-                    }
+            int clientsLeft = numClients;
+            while (clientsLeft > 0) {
+                String line = "";
+                try {
+                    line = server.readLine();
+                } catch (IOException | InterruptedException ex) {
                 }
-            } catch (IOException ex) {
-                Logger.getLogger(ChatIT.class.getName()).log(Level.SEVERE, null, ex);
+                if (line.contains("has joined")) {
+                    clientsLeft--;
+                    System.out.println("clientsLeft = " + clientsLeft);
+                }
             }
         });
 
@@ -82,16 +82,28 @@ public class ChatIT {
         }
 
         executor.shutdown();
-        executor.awaitTermination(10, TimeUnit.SECONDS);
+        executor.awaitTermination(1, TimeUnit.MINUTES);
+
+        aJavaClient = clients.get(0);
+        aCsharpClient = clients.get(1);
     }
 
     @AfterClass
-    public static void tearDownClass() {
+    public static void tearDownClass() throws IOException {
+        FileUtils.deleteRecursive(new File("ChatIT/"));
         server.end();
         clients.forEach(client -> {
             client.end();
         });
-        FileUtils.deleteRecursive(new File("ChatIT"));
+        System.out.println("===========\nServer output: \n===========\n" + server.readAll());
+    }
+
+    @Before
+    public void before() throws IOException, InterruptedException {
+        Thread.sleep(100);
+        for (ProcessStreams client : clients) {
+            client.clearOutput();
+        }
     }
 
     @Test
@@ -100,20 +112,33 @@ public class ChatIT {
         assertTrue(Files.exists(Paths.get("ChatIT/client1/localdata/welcome.txt")));
     }
 
-    @Test
-    public void testSendingMessage() throws IOException {
-        ProcessStreams sender = clients.get(0);
+    private void testSendingMessage(ProcessStreams sender) throws IOException {
         sender.writeAndFlush("Hello world!\n");
-        assertTrue(clients.stream().skip(1).allMatch(client -> {
-            return client._in.lines().anyMatch(line -> line.contains("Hello world!"));
-        }));
+        clients.stream().filter(client -> client != sender).forEach(client -> {
+            try {
+                String line = client.readLine();
+                assertThat(line, containsString("Hello world!"));
+            } catch (IOException | InterruptedException ex) {
+                fail("No output found.");
+            }
+        });
     }
 
     @Test
-    public void testWhisper() throws IOException {
-        ProcessStreams sender = clients.get(0);
-        ProcessStreams reciever = clients.get(1);
-        sender.writeAndFlush("/client1 1v1 me bro\n");
-        assertTrue(reciever._in.lines().anyMatch(line -> line.contains("1v1 me bro")));
+    public void testSendingMessage() throws IOException, InterruptedException {
+        testSendingMessage(aJavaClient);
+        before(); // needed?
+        testSendingMessage(aCsharpClient); // fails because C#'s GZip does not work.
+    }
+
+    public void testWhisper(ProcessStreams sender, ProcessStreams reciever, String recieverUsername) throws IOException, InterruptedException {
+        sender.writeAndFlush(String.format("/%s 1v1 me bro\n", recieverUsername));
+        assertThat(reciever.readLine(), containsString("1v1 me bro"));
+    }
+
+    @Test
+    public void testWhisper() throws IOException, InterruptedException {
+        testWhisper(aJavaClient, aCsharpClient, "client1");
+        testWhisper(aCsharpClient, aJavaClient, "client0");
     }
 }

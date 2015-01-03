@@ -39,6 +39,7 @@ namespace ChatClient
         {
             var message = new JsonMessageBuilder()
                     .Type("ChatMessage")
+                    .Compressed(true)
                     .Set("msg", msg)
                     .Build();
             Send(message);

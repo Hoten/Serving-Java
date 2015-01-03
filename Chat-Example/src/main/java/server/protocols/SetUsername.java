@@ -11,14 +11,12 @@ public class SetUsername extends JsonMessageHandler<ConnectionToChatClientHandle
     @Override
     protected void handle(ConnectionToChatClientHandler connection, JsonObject data) {
         String username = data.get("username").getAsString();
-
         connection.setUsername(username);
-
         Message message = new JsonMessageBuilder()
                 .type("PeerJoin")
                 .set("username", username)
                 .build();
-
         connection.server.sendToAllBut(message, connection);
+        System.out.println(username + " has joined!");
     }
 }

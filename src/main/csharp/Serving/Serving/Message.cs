@@ -54,15 +54,9 @@ namespace Serving
 
         public Message(byte[] data, String type, bool compressed)
         {
-            Data = data;
             Type = type;
             Compressed = compressed;
+            Data = compressed ? new Compressor().Compress(data) : data;
         }
-
-        /*private JavaBinaryReader InterpretAsBinary()
-        {
-            var stream = new MemoryStream(Data);
-            return new JavaBinaryReader(stream);
-        }*/
     }
 }

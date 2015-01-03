@@ -38,6 +38,7 @@ public class ConnectionToChatServerHandler extends ConnectionToServerHandler {
     public void sendMessage(String msg) throws IOException {
         Message message = new JsonMessageBuilder()
                 .type("ChatMessage")
+                .compressed(true)
                 .set("msg", msg)
                 .build();
         send(message);
