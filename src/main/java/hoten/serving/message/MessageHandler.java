@@ -1,6 +1,7 @@
 package hoten.serving.message;
 
 import hoten.serving.SocketHandler;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.List;
@@ -28,9 +29,9 @@ public abstract class MessageHandler<S extends SocketHandler, T> {
 
     protected abstract T interpret(byte[] bytes) throws UnsupportedEncodingException;
 
-    protected abstract void handle(S connection, T data);
+    protected abstract void handle(S connection, T data) throws IOException;
 
-    public void handle(S connection, byte[] bytes) throws UnsupportedEncodingException {
+    public void handle(S connection, byte[] bytes) throws IOException, UnsupportedEncodingException {
         handle(connection, interpret(bytes));
     }
 }

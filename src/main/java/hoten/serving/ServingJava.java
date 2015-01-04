@@ -4,7 +4,6 @@ import hoten.serving.message.Message;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.SocketException;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
@@ -27,7 +26,7 @@ public abstract class ServingJava<S extends SocketHandler> {
 
     protected abstract void setupNewClient(S newClient) throws IOException;
 
-    protected abstract void onClientClose(S client);
+    protected abstract void onClientClose(S client) throws IOException;
 
     public void startServer() {
         exec.execute(() -> {
@@ -42,6 +41,7 @@ public abstract class ServingJava<S extends SocketHandler> {
                             }, newClient);
                         } catch (InstantiationException | IllegalAccessException ex) {
                             Logger.getLogger(ServingJava.class.getName()).log(Level.SEVERE, null, ex);
+                            removeClient(newClient);
                         } catch (IOException ex) {
                             removeClient(newClient);
                         }
@@ -63,7 +63,11 @@ public abstract class ServingJava<S extends SocketHandler> {
     private void removeClient(S client) {
         _clients.remove(client);
         client.close();
-        onClientClose(client);
+        try {
+            onClientClose(client);
+        } catch (IOException ex) {
+            Logger.getLogger(ServingJava.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     public void sendTo(Message message, S client) {

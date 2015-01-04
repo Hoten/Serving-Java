@@ -37,7 +37,7 @@ public final class SocketHandlerImpl implements SocketHandler {
     }
 
     @Override
-    public void close() {
+    public synchronized void close() {
         if (_socket.isClosed()) {
             return;
         }
