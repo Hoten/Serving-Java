@@ -3,7 +3,7 @@
 namespace Serving
 {
     public abstract class BinaryMessageHandler<S> : MessageHandler<S, JavaBinaryReader>
-        where S : ConnectionToServerHandler
+        where S : SocketHandler
     {
         protected override JavaBinaryReader Interpret(byte[] bytes)
         {

@@ -6,6 +6,9 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Serving", "Serving\Serving.csproj", "{42D0EF3A-4C88-4B15-9169-F99678DDEAA1}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChatClient", "..\..\..\..\Chat-Example\src\main\csharp\ChatClient\ChatClient\ChatClient.csproj", "{5087967B-6D89-4183-81D8-725079D92DA2}"
+	ProjectSection(ProjectDependencies) = postProject
+		{42D0EF3A-4C88-4B15-9169-F99678DDEAA1} = {42D0EF3A-4C88-4B15-9169-F99678DDEAA1}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JavaCsharpBinaryDataIT", "..\..\..\test\csharp\JavaCsharpBinaryDataIT\JavaCsharpBinaryDataIT.csproj", "{F9C3BC0C-C34F-4C9D-82CA-0A329728B833}"
 EndProject

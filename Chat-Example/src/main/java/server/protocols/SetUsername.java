@@ -16,7 +16,7 @@ public class SetUsername extends JsonMessageHandler<ConnectionToChatClientHandle
                 .type("PeerJoin")
                 .set("username", username)
                 .build();
-        connection.server.sendToAllBut(message, connection);
+        connection.getServingChat().sendToAllBut(message, connection);
         System.out.println(username + " has joined!");
     }
 }

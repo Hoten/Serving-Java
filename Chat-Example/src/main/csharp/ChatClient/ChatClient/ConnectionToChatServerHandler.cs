@@ -1,21 +1,19 @@
 ﻿using Serving;
+using Serving.FileTransferring;
 using System;
 
 namespace ChatClient
 {
-    class ConnectionToChatServerHandler : ConnectionToServerHandler
+    class ConnectionToChatServerHandler : SocketHandler
     {
         public Chat Chat { get; private set; }
 
-        public ConnectionToChatServerHandler(Chat chat, String host, int port)
-            : base(host, port)
-        {
-            Chat = chat;
-        }
+        private FileTransferringSocketReciever _socketHandler;
 
-        protected override void OnConnectionSettled()
+        public ConnectionToChatServerHandler(String host, int port, Chat chat)
         {
-            Chat.StartChat(this);
+            _socketHandler = new FileTransferringSocketReciever(new SocketHandlerImpl("localhost", 1234));
+            Chat = chat;
         }
 
         public void SendUsername(String username)
@@ -39,7 +37,7 @@ namespace ChatClient
         {
             var message = new JsonMessageBuilder()
                     .Type("ChatMessage")
-                    .Compressed(true)
+                    /*.Compressed(true)*/ // :(
                     .Set("msg", msg)
                     .Build();
             Send(message);
@@ -53,6 +51,36 @@ namespace ChatClient
                     .Set("msg", msg)
                     .Build();
             Send(message);
+        }
+
+        public void Start(Action onConnectionSettled, SocketHandler topLevelSocketHandler)
+        {
+            _socketHandler.Start(onConnectionSettled, topLevelSocketHandler);
+        }
+        
+        public void Send(Message message)
+        {
+            _socketHandler.Send(message);
+        }
+
+        public void Close()
+        {
+            _socketHandler.Close();
+        }
+
+        public JavaBinaryReader GetInputStream()
+        {
+            return _socketHandler.GetInputStream();
+        }
+
+        public JavaBinaryWriter GetOutputStream()
+        {
+            return _socketHandler.GetOutputStream();
+        }
+
+        public String GetLocalDataFolder()
+        {
+            return _socketHandler.LocalDataFolder;
         }
     }
 }

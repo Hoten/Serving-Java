@@ -128,7 +128,7 @@ public class ChatIT {
     public void testSendingMessage() throws IOException, InterruptedException {
         testSendingMessage(aJavaClient);
         before(); // needed?
-        testSendingMessage(aCsharpClient); // fails because C#'s GZip does not work.
+        testSendingMessage(aCsharpClient);
     }
 
     public void testWhisper(ProcessStreams sender, ProcessStreams reciever, String recieverUsername) throws IOException, InterruptedException {

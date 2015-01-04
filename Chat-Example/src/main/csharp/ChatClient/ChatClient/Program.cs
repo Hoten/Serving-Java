@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Serving;
+using System;
 
 namespace ChatClient
 {
@@ -8,8 +9,8 @@ namespace ChatClient
         {
             Console.WriteLine("starting");
             var chat = new Chat();
-            var conn = new ConnectionToChatServerHandler(chat, "localhost", 1234);
-            conn.Start();
+            var conn = new ConnectionToChatServerHandler("localhost", 1234, chat);
+            conn.Start(() => chat.StartChat(conn), conn);
             while (true) { } // :(
         }
     }

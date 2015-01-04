@@ -82,7 +82,7 @@ namespace ChatClient
 
         private void ReadWelcomeMesssage()
         {
-            String welcome = System.IO.File.ReadAllText(Path.Combine(_serverConnection.LocalDataFolder, "welcome.txt"));
+            String welcome = System.IO.File.ReadAllText(Path.Combine(_serverConnection.GetLocalDataFolder(), "welcome.txt"));
             welcome = welcome.Replace("%s", "{0}"); // :(
             String formatted = String.Format(welcome, _username);
             Console.WriteLine("\n" + formatted + "\n");

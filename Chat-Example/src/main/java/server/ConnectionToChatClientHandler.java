@@ -1,40 +1,51 @@
 package server;
 
-import hoten.serving.message.JsonMessageBuilder;
-import hoten.serving.message.Message;
 import hoten.serving.SocketHandler;
+import hoten.serving.SocketHandlerImpl;
+import hoten.serving.message.Message;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 
-public class ConnectionToChatClientHandler extends SocketHandler {
+public class ConnectionToChatClientHandler implements SocketHandler {
 
-    final public ServingChat server; // :(
+    private final SocketHandler _socketHandler;
+    private final ServingChat _servingChat;
     private String _username;
 
-    public ConnectionToChatClientHandler(ServingChat server, Socket socket) throws IOException {
-        super(socket);
-        this.server = server;
+    public ConnectionToChatClientHandler(Socket socket, ServingChat servingChat) throws IOException {
+        _socketHandler = new SocketHandlerImpl(socket);
+        _servingChat = servingChat;
     }
 
     @Override
-    protected void onConnectionSettled() throws IOException {
-        Message msg = new JsonMessageBuilder()
-                .type("Print")
-                .set("msg", server.whoIsOnline())
-                .build();
-        send(msg);
+    public void start(Runnable onConnectionSettled, SocketHandler topLevelSocketHandler) throws IOException, InstantiationException, IllegalAccessException {
+        _socketHandler.start(onConnectionSettled, topLevelSocketHandler);
     }
 
     @Override
-    protected void close() {
-        super.close();
-        if (_username != null) {
-            Message message = new JsonMessageBuilder()
-                    .type("PeerDisconnect")
-                    .set("username", _username)
-                    .build();
-            server.sendToAllBut(message, this);
-        }
+    public void send(Message message) throws IOException {
+        _socketHandler.send(message);
+    }
+
+    @Override
+    public void close() {
+        _socketHandler.close();
+    }
+
+    @Override
+    public DataOutputStream getOutputStream() {
+        return _socketHandler.getOutputStream();
+    }
+
+    @Override
+    public DataInputStream getInputStream() {
+        return _socketHandler.getInputStream();
+    }
+
+    public ServingChat getServingChat() {
+        return _servingChat;
     }
 
     public String getUsername() {

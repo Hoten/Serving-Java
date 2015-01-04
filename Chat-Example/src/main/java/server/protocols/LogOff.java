@@ -9,6 +9,6 @@ public class LogOff extends JsonMessageHandler<ConnectionToChatClientHandler> {
 
     @Override
     protected void handle(ConnectionToChatClientHandler connection, JsonObject data) {
-        connection.closeIfOpen();
+        connection.close();
     }
 }

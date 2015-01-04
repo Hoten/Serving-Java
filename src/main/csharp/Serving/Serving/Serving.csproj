@@ -54,20 +54,23 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BinaryMessageHandler.cs" />
+    <Compile Include="FileTransferring\FileTransferringSocketReciever.cs" />
     <Compile Include="JavaBinaryReader.cs" />
     <Compile Include="JavaBinaryWriter.cs" />
-    <Compile Include="ConnectionToServerHandler.cs" />
     <Compile Include="JsonMessageBuilder.cs" />
     <Compile Include="JsonMessageHandler.cs" />
     <Compile Include="Message.cs" />
     <Compile Include="MessageHandler.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ReflexionExtension.cs" />
+    <Compile Include="SocketHandler.cs" />
+    <Compile Include="SocketHandlerImpl.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

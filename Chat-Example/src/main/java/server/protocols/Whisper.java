@@ -10,11 +10,13 @@ public class Whisper extends JsonMessageHandler<ConnectionToChatClientHandler> {
 
     @Override
     protected void handle(ConnectionToChatClientHandler connection, JsonObject data) {
+        String msg = data.get("msg").getAsString();
+        String to = data.get("to").getAsString();
         Message message = new JsonMessageBuilder()
                 .type("Whisper")
                 .set("from", connection.getUsername())
-                .set("msg", data.get("msg").getAsString())
+                .set("msg", msg)
                 .build();
-        connection.server.sendToClientWithUsername(message, data.get("to").getAsString());
+        connection.getServingChat().sendToClientWithUsername(message, to);
     }
 }

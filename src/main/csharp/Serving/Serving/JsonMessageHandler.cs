@@ -4,7 +4,7 @@ using System.Text;
 namespace Serving
 {
     public abstract class JsonMessageHandler<S> : MessageHandler<S, JObject>
-        where S: ConnectionToServerHandler
+        where S : SocketHandler
     {
         protected override JObject Interpret(byte[] bytes)
         {

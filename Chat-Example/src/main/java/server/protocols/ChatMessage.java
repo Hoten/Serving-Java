@@ -15,6 +15,6 @@ public class ChatMessage extends JsonMessageHandler<ConnectionToChatClientHandle
                 .set("from", connection.getUsername())
                 .set("msg", data.get("msg").getAsString())
                 .build();
-        connection.server.sendToAllBut(message, connection);
+        connection.getServingChat().sendToAllBut(message, connection);
     }
 }

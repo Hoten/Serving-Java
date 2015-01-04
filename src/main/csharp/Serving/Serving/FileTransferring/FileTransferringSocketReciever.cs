@@ -3,88 +3,43 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net.Sockets;
-using System.Reflection;
 using System.Security.Cryptography;
-using System.Threading;
+using System.Text;
 
-namespace Serving
+namespace Serving.FileTransferring
 {
-    public abstract class ConnectionToServerHandler
+    public class FileTransferringSocketReciever : SocketHandler
     {
         public String LocalDataFolder { get; private set; }
 
-        private Thread _dataHandleThread;
-        private Socket _socket;
-        private JavaBinaryReader _in;
+        private SocketHandler _socketHandler;
         private JavaBinaryWriter _out;
+        private JavaBinaryReader _in;
 
-        public ConnectionToServerHandler(String host, int port)
+        public FileTransferringSocketReciever(SocketHandler socketHandler)
         {
-            Connect(host, port);
+            _socketHandler = socketHandler;
+            _out = socketHandler.GetOutputStream();
+            _in = socketHandler.GetInputStream();
         }
 
-        public void Start()
+        public void Start(Action onConnectionSettled, SocketHandler topLevelSocketHandler)
         {
-            _dataHandleThread = new Thread(Run);
-            _dataHandleThread.Start();
-        }
-
-        protected virtual void Run() {
-            Thread.CurrentThread.IsBackground = true;
-            LocalDataFolder = _in.ReadJavaUTF(); // :(
+            LocalDataFolder = _in.ReadJavaUTF();
             Directory.CreateDirectory(LocalDataFolder);
             RespondToHashes();
             ReadNewFilesFromServer();
-            OnConnectionSettled();
-            while (true)
-            {
-                HandleData();
-            }
+            _socketHandler.Start(onConnectionSettled, topLevelSocketHandler);
         }
-
-        protected abstract void OnConnectionSettled();
 
         public void Send(Message message)
         {
-            try
-            {
-                lock (_out)
-                {
-                    _out.Write(message.Data.Length);
-                    _out.WriteJavaUTF(message.Type);
-                    _out.Write(message.Compressed);
-                    _out.Write(message.Data);
-                }
-            }
-            catch (IOException ex)
-            {
-                Close();
-            }
+            _socketHandler.Send(message);
         }
 
         public void Close()
         {
-            _dataHandleThread.Abort();
-            try
-            {
-                _out.Close();
-                _in.Close();
-                _socket.Close();
-            }
-            catch (IOException ex)
-            {
-                Console.WriteLine("Error closing streams " + ex);
-            }
-        }
-
-        private void Connect(String host, int port)
-        {
-            _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            _socket.Connect(host, port);
-            var stream = new NetworkStream(_socket);
-            _in = new JavaBinaryReader(stream);
-            _out = new JavaBinaryWriter(stream);
+            _socketHandler.Close();
         }
 
         private void RespondToHashes()
@@ -147,23 +102,15 @@ namespace Serving
             }
             _out.Write((byte)0); //done updating files
         }
-
-        private void HandleData()
+        
+        public JavaBinaryWriter GetOutputStream()
         {
-            int dataSize = _in.ReadInt32();
-            var type = _in.ReadJavaUTF();
-            var compressed = _in.ReadBoolean();
-            var bytes = _in.ReadBytes(dataSize);
+            return _socketHandler.GetOutputStream();
+        }
 
-            if (compressed)
-            {
-                bytes = new Decompressor().Uncompress(bytes);
-            }
-
-            var handlerType = MessageHandler<ConnectionToServerHandler, Object>.Get(type);
-            var method = handlerType.GetMethod("Handle");
-            var ins = Activator.CreateInstance(handlerType);
-            method.Invoke(ins, new Object[] { this, bytes });
+        public JavaBinaryReader GetInputStream()
+        {
+            return _socketHandler.GetInputStream();
         }
     }
 }

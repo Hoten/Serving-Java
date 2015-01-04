@@ -1,23 +1,24 @@
 package client;
 
-import hoten.serving.ConnectionToServerHandler;
+import hoten.serving.SocketHandler;
+import hoten.serving.SocketHandlerImpl;
+import hoten.serving.filetransferring.FileTransferringSocketReciever;
 import hoten.serving.message.JsonMessageBuilder;
 import hoten.serving.message.Message;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.net.Socket;
 
-public class ConnectionToChatServerHandler extends ConnectionToServerHandler {
+public class ConnectionToChatServerHandler implements SocketHandler {
 
+    private final FileTransferringSocketReciever _socketHandler;
     private final Chat _chat;
 
-    public ConnectionToChatServerHandler(Chat chat, Socket socket) throws IOException {
-        super(socket);
+    public ConnectionToChatServerHandler(Socket socket, Chat chat) throws IOException {
+        _socketHandler = new FileTransferringSocketReciever(new SocketHandlerImpl(socket));
         _chat = chat;
-    }
-
-    @Override
-    protected void onConnectionSettled() throws IOException {
-        _chat.startChat(this);
     }
 
     public void sendUsername(String username) throws IOException {
@@ -38,7 +39,7 @@ public class ConnectionToChatServerHandler extends ConnectionToServerHandler {
     public void sendMessage(String msg) throws IOException {
         Message message = new JsonMessageBuilder()
                 .type("ChatMessage")
-                .compressed(true)
+                /*.compressed(true)*/ // :(
                 .set("msg", msg)
                 .build();
         send(message);
@@ -51,6 +52,35 @@ public class ConnectionToChatServerHandler extends ConnectionToServerHandler {
                 .set("msg", msg)
                 .build();
         send(message);
+    }
+
+    @Override
+    public void start(Runnable onConnectionSettled, SocketHandler topLevelSocketHandler) throws IOException, InstantiationException, IllegalAccessException {
+        _socketHandler.start(onConnectionSettled, topLevelSocketHandler);
+    }
+
+    @Override
+    public void send(Message message) throws IOException {
+        _socketHandler.send(message);
+    }
+
+    @Override
+    public void close() {
+        _socketHandler.close();
+    }
+
+    @Override
+    public DataOutputStream getOutputStream() {
+        return _socketHandler.getOutputStream();
+    }
+
+    @Override
+    public DataInputStream getInputStream() {
+        return _socketHandler.getInputStream();
+    }
+
+    public File getLocalDataFolder() {
+        return _socketHandler.getLocalDataFolder();
     }
 
     public Chat getChat() {

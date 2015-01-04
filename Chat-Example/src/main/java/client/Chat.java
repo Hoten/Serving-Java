@@ -14,7 +14,7 @@ public class Chat {
     private String _username;
 
     @SuppressWarnings("empty-statement")
-    public void startChat(ConnectionToChatServerHandler serverConnection) throws IOException {
+    public void start(ConnectionToChatServerHandler serverConnection) throws IOException {
         _serverConnection = serverConnection;
         final Scanner s = new Scanner(System.in);
         _username = promptUsername(s);
@@ -26,7 +26,7 @@ public class Chat {
             } catch (IOException ex) {
                 Logger.getLogger(Chat.class.getName()).log(Level.SEVERE, null, ex);
             }
-            _serverConnection.closeIfOpen();
+            _serverConnection.close();
         });
     }
 
@@ -77,7 +77,7 @@ public class Chat {
     }
 
     private void readWelcomeMesssage() throws IOException {
-        File f = new File(_serverConnection.localDataFolder, "welcome.txt");
+        File f = new File(_serverConnection.getLocalDataFolder(), "welcome.txt");
         String welcome = new String(FileUtils.readFileToByteArray(f), "UTF-8");
         String formatted = String.format(welcome, _username);
         System.out.println("\n" + formatted + "\n");
