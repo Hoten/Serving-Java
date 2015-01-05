@@ -83,10 +83,17 @@ namespace Serving
                 bytes = new Decompressor().Uncompress(bytes);
             }
 
-            var handlerType = MessageHandler<SocketHandler, Object>.Get(type);
-            var method = handlerType.GetMethod("Handle");
-            var ins = Activator.CreateInstance(handlerType);
-            method.Invoke(ins, new Object[] { topLevelSocketHandler, bytes });
+            try
+            {
+                var handlerType = MessageHandler<SocketHandler, Object>.Get(type);
+                var method = handlerType.GetMethod("Handle");
+                var ins = Activator.CreateInstance(handlerType);
+                method.Invoke(ins, new Object[] { topLevelSocketHandler, bytes });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                throw new Exception("No such protocol: " + type);
+            }
         }
 
         public JavaBinaryWriter GetOutputStream()

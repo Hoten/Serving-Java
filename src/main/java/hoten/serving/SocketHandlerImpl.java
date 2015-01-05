@@ -66,8 +66,12 @@ public final class SocketHandlerImpl implements SocketHandler {
         }
 
         Class handlerKlass = MessageHandler.get(type);
-        MessageHandler ins = (MessageHandler) handlerKlass.newInstance();
-        ins.handle(topLevelSocketHandler, bytes);
+        if (handlerKlass != null) {
+            MessageHandler ins = (MessageHandler) handlerKlass.newInstance();
+            ins.handle(topLevelSocketHandler, bytes);
+        } else {
+            throw new InstantiationException("No such protocol: " + type);
+        }
     }
 
     @Override
