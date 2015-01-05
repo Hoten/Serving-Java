@@ -12,7 +12,7 @@ namespace ChatClient
 
         public ConnectionToChatServerHandler(String host, int port, Chat chat)
         {
-            _socketHandler = new FileTransferringSocketReciever(new SocketHandlerImpl("localhost", 1234));
+            _socketHandler = new FileTransferringSocketReciever(new SocketHandlerImpl(host, port));
             Chat = chat;
         }
 
