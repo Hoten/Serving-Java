@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
-using System.Text;
 
 namespace Serving.FileTransferring
 {
@@ -13,20 +12,27 @@ namespace Serving.FileTransferring
         public String LocalDataFolder { get; private set; }
 
         private SocketHandler _socketHandler;
+        private FileSystem _fileSystem;
         private JavaBinaryWriter _out;
         private JavaBinaryReader _in;
 
-        public FileTransferringSocketReciever(SocketHandler socketHandler)
+        public FileTransferringSocketReciever(SocketHandler socketHandler, FileSystem fileSystem)
         {
             _socketHandler = socketHandler;
+            _fileSystem = fileSystem;
             _out = socketHandler.GetOutputStream();
             _in = socketHandler.GetInputStream();
+        }
+
+        public FileTransferringSocketReciever(SocketHandler socketHandler)
+            : this(socketHandler, new RegularFileSystem())
+        {
         }
 
         public void Start(Action onConnectionSettled, SocketHandler topLevelSocketHandler)
         {
             LocalDataFolder = _in.ReadJavaUTF();
-            Directory.CreateDirectory(LocalDataFolder);
+            _fileSystem.InitDirectory(LocalDataFolder);
             RespondToHashes();
             ReadNewFilesFromServer();
             _socketHandler.Start(onConnectionSettled, topLevelSocketHandler);
@@ -45,7 +51,7 @@ namespace Serving.FileTransferring
         private void RespondToHashes()
         {
             var hashes = ReadFileHashesFromServer();
-            var localFiles = new List<String>(Directory.GetFiles(LocalDataFolder));
+            var localFiles = _fileSystem.GetFiles(LocalDataFolder);
             var filesToRequest = CompareFileHashes(localFiles, hashes);
             var json = JsonConvert.SerializeObject(filesToRequest);
 
@@ -69,13 +75,13 @@ namespace Serving.FileTransferring
                 var path = System.IO.Path.Combine(LocalDataFolder, fileName);
 
                 files.Remove(fileName);
-                if (!File.Exists(path))
+                if (!_fileSystem.Exists(path))
                 {
                     filesToRequest.Add(fileName);
                 }
                 else
                 {
-                    var bytes = File.ReadAllBytes(path);
+                    var bytes = _fileSystem.ReadAllBytes(path);
                     var localHash = MD5.Create().ComputeHash(bytes);
                     sbyte[] signed = new sbyte[localHash.Length]; // :(
                     Buffer.BlockCopy(localHash, 0, signed, 0, localHash.Length);
@@ -97,8 +103,8 @@ namespace Serving.FileTransferring
                 int length = _in.ReadInt32();
                 var data = _in.ReadBytes(length);
                 var path = System.IO.Path.Combine(LocalDataFolder, fileName);
-                Directory.CreateDirectory(Path.GetDirectoryName(path));
-                File.WriteAllBytes(path, data);
+                _fileSystem.CreateDirectory(Path.GetDirectoryName(path));
+                _fileSystem.Write(path, data);
             }
             _out.Write((byte)0); //done updating files
         }

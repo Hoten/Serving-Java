@@ -54,7 +54,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BinaryMessageHandler.cs" />
+    <Compile Include="FileTransferring\FileSystem.cs" />
     <Compile Include="FileTransferring\FileTransferringSocketReciever.cs" />
+    <Compile Include="FileTransferring\RegularFileSystem.cs" />
     <Compile Include="JavaBinaryReader.cs" />
     <Compile Include="JavaBinaryWriter.cs" />
     <Compile Include="JsonMessageBuilder.cs" />
