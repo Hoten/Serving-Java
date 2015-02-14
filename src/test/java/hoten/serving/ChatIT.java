@@ -16,7 +16,7 @@ import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import static org.junit.Assert.assertThat;
-import static org.junit.internal.matchers.StringContains.containsString;
+import static org.hamcrest.CoreMatchers.containsString;
 
 public class ChatIT {
 
@@ -24,7 +24,7 @@ public class ChatIT {
     private static final List<ProcessStreams> clients = new ArrayList();
     private static ProcessStreams aJavaClient;
     private static ProcessStreams aCsharpClient;
-    private static final String jarPath = new File("Chat-Example/target/Chat-Example-1.0-SNAPSHOT-jar-with-dependencies.jar").getAbsolutePath();
+    private static final String jarPath = new File("Chat-Example/build/libs/Chat-Example-all.jar").getAbsolutePath();
     private static final String csharpExePath = new File("Chat-Example/src/main/csharp/ChatClient/ChatClient/bin/Release/ChatClient").getAbsolutePath();
 
     private static ProcessStreams makeServerProcess() throws IOException {

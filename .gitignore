@@ -216,10 +216,10 @@ pip-log.txt
 
 
 #############
-## Maven
+## Gradle
 #############
 
-target/
+.gradle/
 
 #############
 ## Serving
