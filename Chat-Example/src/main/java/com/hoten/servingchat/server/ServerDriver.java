@@ -10,7 +10,7 @@ import org.apache.commons.io.FileUtils;
 public class ServerDriver {
 
     public static void main(String[] args) throws IOException {
-        MessageHandler.loadMessageHandlers(Arrays.asList("server.protocols"));
+        MessageHandler.loadMessageHandlers(Arrays.asList("com.hoten.servingchat.server.protocols"));
         int port = 1234;
         String clientDataDirName = "clientdata";
         String localDataDirName = "localdata";

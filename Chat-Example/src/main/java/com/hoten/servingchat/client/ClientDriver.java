@@ -10,7 +10,7 @@ import java.util.logging.Logger;
 public class ClientDriver {
 
     public static void main(String[] args) throws Exception {
-        MessageHandler.loadMessageHandlers(Arrays.asList("client.protocols"));
+        MessageHandler.loadMessageHandlers(Arrays.asList("com.hoten.servingchat.client.protocols"));
         Chat chat = new Chat();
         chat.announce("Connecting to server...");
         Socket socket = new Socket("localhost", 1234);

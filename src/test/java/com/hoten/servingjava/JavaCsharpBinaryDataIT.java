@@ -1,4 +1,4 @@
-package hoten.serving;
+package com.hoten.servingjava;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;

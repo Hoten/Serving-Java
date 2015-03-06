@@ -1,4 +1,4 @@
-package hoten.serving;
+package com.hoten.servingjava;
 
 import java.io.File;
 import java.io.IOException;
@@ -30,7 +30,7 @@ public class ChatIT {
     private static ProcessStreams makeServerProcess() throws IOException {
         ProcessBuilder builder = new ProcessBuilder()
                 .directory(new File("ChatIT"))
-                .command("java", "-cp", jarPath, "server.ServerDriver")
+                .command("java", "-cp", jarPath, "com.hoten.servingchat.server.ServerDriver")
                 .redirectErrorStream(true);
         return ProcessStreams.makeProcess(builder);
     }
@@ -38,7 +38,7 @@ public class ChatIT {
     private static ProcessStreams makeJavaClientProcess(String clientName) throws IOException {
         ProcessBuilder builder = new ProcessBuilder()
                 .directory(new File("ChatIT/" + clientName))
-                .command("java", "-cp", jarPath, "client.ClientDriver")
+                .command("java", "-cp", jarPath, "com.hoten.servingchat.client.ClientDriver")
                 .redirectErrorStream(true);
         return ProcessStreams.makeProcess(builder);
     }
