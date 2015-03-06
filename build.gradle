@@ -1,7 +1,21 @@
+apply plugin: 'maven'
+
+group = "com.hoten.servingjava"
+version = "0.1"
+
 allprojects {
   apply plugin: 'java'
 
+  task fatJar(type: Jar) {
+    baseName = project.name + '-all'
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+    with jar
+  }
+
+  jar.dependsOn fatJar
+
   repositories {
+    mavenLocal()
     mavenCentral()
   }
 
@@ -19,19 +33,11 @@ project(':') {
 }
 
 project(':Chat-Example') {
-  task fatJar(type: Jar) {
-    baseName = project.name + '-all'
-    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
-    with jar
-  }
-
-  jar.dependsOn fatJar
-
   dependencies {
     compile project(':')
   }
 }
 
-defaultTasks 'clean', 'test'
+defaultTasks 'clean', 'test', 'install'
 
 println "======WARNING======\nIf you make changes to the csharp projects:\nMake sure to BUILD THEM MANUALLY!\n================"

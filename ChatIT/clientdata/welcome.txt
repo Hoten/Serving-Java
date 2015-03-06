@@ -1,0 +1,2 @@
+Hello %s! Welcome to the chat. Here is a random number: 0.671790
+And this is when the server was started: Thu Mar 05 22:12:04 CST 2015

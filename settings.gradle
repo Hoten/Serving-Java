@@ -1,1 +1,3 @@
 include ":", ":Chat-Example"
+
+rootProject.name = "serving-java"

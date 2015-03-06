@@ -383,3 +383,4 @@ UpgradeLog*.htm
 *.bim_*.settings
 # Microsoft Fakes
 FakesAssemblies/
+/.nb-gradle/private/
