@@ -18,14 +18,15 @@ import static org.junit.Assert.*;
 import static org.junit.Assert.assertThat;
 import static org.hamcrest.CoreMatchers.containsString;
 
+// :(
 public class ChatIT {
 
     private static ProcessStreams server;
     private static final List<ProcessStreams> clients = new ArrayList();
     private static ProcessStreams aJavaClient;
     private static ProcessStreams aCsharpClient;
-    private static final String jarPath = new File("Chat-Example/build/libs/Chat-Example-all.jar").getAbsolutePath();
-    private static final String csharpExePath = new File("Chat-Example/src/main/csharp/ChatClient/ChatClient/bin/Release/ChatClient").getAbsolutePath();
+    private static final String jarPath = new File("chat-example/build/libs/chat-example-all.jar").getAbsolutePath();
+    private static final String csharpExePath = new File("chat-example/src/main/csharp/ChatClient/ChatClient/bin/Release/ChatClient").getAbsolutePath();
 
     private static ProcessStreams makeServerProcess() throws IOException {
         ProcessBuilder builder = new ProcessBuilder()

@@ -29,10 +29,10 @@ allprojects {
 }
 
 project(':') {
-  test.dependsOn ':Chat-Example:build'
+  test.dependsOn ':chat-example:build'
 }
 
-project(':Chat-Example') {
+project(':chat-example') {
   dependencies {
     compile project(':')
   }
